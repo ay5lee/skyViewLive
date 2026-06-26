@@ -1,0 +1,18 @@
+services:
+  proxy:
+    image: nairda8/skyview-proxy:latest
+    restart: unless-stopped
+    environment:
+      - HTTP_PROXY=${HTTP_PROXY:-}
+      - HTTPS_PROXY=${HTTPS_PROXY:-}
+      - NO_PROXY=${NO_PROXY:-}
+    volumes:
+      - ./route_cache.json:/app/route_cache.json
+
+  frontend:
+    image: nairda8/skyview-frontend:latest
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    depends_on:
+      - proxy
