@@ -109,6 +109,8 @@ def _is_valid_route(r):
     """Return False for known-bad cache entries so they get re-fetched."""
     if not r:
         return False
+    if r.get('source') == 'geo-fallback':
+        return False
     orig = r.get('orig')
     dest = r.get('dest')
     if not orig:
@@ -245,8 +247,7 @@ def origin_from_track(hex24):
 
 
 def _correct_origin_async(key, result, hex24, ac_lat, ac_lon):
-    """Background thread: validate origin via OpenSky and update cache if stale."""
-    # Snapshot the dict to avoid mutating the copy already returned to the client
+    """Background thread: try to correct a stale route via OpenSky departure data."""
     snapshot = dict(result)
     def run():
         dep_icao = get_opensky_departure(hex24)
@@ -256,19 +257,11 @@ def _correct_origin_async(key, result, hex24, ac_lat, ac_lon):
                              'orig_lat': lat, 'orig_lon': lon,
                              'source': 'opensky+adsbdb', 'verified': True})
             print(f"    ✓ {key}: corrected origin → {iata} (OpenSky)")
+            _route_cache[key] = snapshot
+            _persist_cache_if_needed()
         else:
-            # OpenSky has nothing — nearest airport to current position is best guess for origin
-            apt = nearest_airport(ac_lat, ac_lon, max_dist_km=300) if ac_lat is not None else None
-            if apt:
-                iata, city, alat, alon = apt[1], apt[2], apt[3], apt[4]
-                snapshot.update({'orig': iata, 'orig_city': city,
-                                 'orig_lat': alat, 'orig_lon': alon,
-                                 'source': 'geo-fallback', 'verified': False})
-                print(f"    ~ {key}: geo-fallback origin → {iata}")
-            else:
-                snapshot['verified'] = False
-        _route_cache[key] = snapshot
-        _persist_cache_if_needed()
+            # No reliable data — don't cache anything, let the next request retry
+            print(f"    ~ {key}: OpenSky has no departure data, leaving uncached")
     threading.Thread(target=run, daemon=True).start()
 
 
