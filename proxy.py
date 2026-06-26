@@ -139,6 +139,18 @@ def _save_cache():
         print(f"  ⚠ Could not save route cache: {e}")
 
 
+def bearing(lat1, lon1, lat2, lon2):
+    """Initial bearing in degrees (0–360) from point 1 to point 2."""
+    lat1, lat2 = math.radians(lat1), math.radians(lat2)
+    dlon = math.radians(lon2 - lon1)
+    x = math.sin(dlon) * math.cos(lat2)
+    y = math.cos(lat1) * math.sin(lat2) - math.sin(lat1) * math.cos(lat2) * math.cos(dlon)
+    return (math.degrees(math.atan2(x, y)) + 360) % 360
+
+def angle_diff(a, b):
+    """Smallest angle between two bearings (0–180)."""
+    return min((a - b) % 360, (b - a) % 360)
+
 def dist_km(lat1, lon1, lat2, lon2):
     R = 6371
     dlat = math.radians(lat2 - lat1)
@@ -269,7 +281,7 @@ def _persist_cache_if_needed():
 
 
 def get_route(mkt_flight, icao_callsign=None, hex24=None, ac_lat=None, ac_lon=None,
-              fms_orig=None, fms_dest=None):
+              ac_track=None, fms_orig=None, fms_dest=None):
     key = (mkt_flight or '').upper().strip()
     if not key:
         return None
@@ -354,11 +366,18 @@ def get_route(mkt_flight, icao_callsign=None, hex24=None, ac_lat=None, ac_lon=No
             # Same-airport route is always bad data
             if route_len < 50:
                 stale = True
-            # A plane on the route satisfies: d_to_orig + d_to_dest ≈ route_len.
-            # If the triangle inequality excess is >60% of route_len, the plane
-            # is not on this route (wrong origin or destination).
+            # Triangle inequality: plane must lie roughly on the route
             elif (d_to_orig + d_to_dest) > route_len * 1.6:
                 stale = True
+            # Heading check: aircraft track must roughly align with the overall
+            # route direction (origin→destination bearing, ±90°). This catches
+            # stale routes where the plane is near one endpoint but flying in
+            # a completely different direction (e.g. ZH9098 near SZX, heading
+            # north toward Wuxi, but KIX→SZX runs southwest at 243°).
+            elif ac_track is not None and route_len > 200:
+                route_bearing = bearing(orig_lat, orig_lon, dest_lat, dest_lon)
+                if angle_diff(ac_track, route_bearing) > 90:
+                    stale = True
         else:
             if d_to_orig > 12000:
                 stale = True
@@ -485,16 +504,17 @@ class ProxyHandler(BaseHTTPRequestHandler):
             fms_orig = params.get('fms_orig', [''])[0].strip().upper() or None
             fms_dest = params.get('fms_dest', [''])[0].strip().upper() or None
             try:
-                ac_lat = float(params['lat'][0]) if 'lat' in params else None
-                ac_lon = float(params['lon'][0]) if 'lon' in params else None
+                ac_lat   = float(params['lat'][0])   if 'lat'   in params else None
+                ac_lon   = float(params['lon'][0])   if 'lon'   in params else None
+                ac_track = float(params['track'][0]) if 'track' in params else None
             except (ValueError, IndexError):
-                ac_lat = ac_lon = None
+                ac_lat = ac_lon = ac_track = None
 
             if not flight:
                 self._json(400, {'error': 'missing flight param'}); return
 
             result = get_route(flight, icao_callsign=cs, hex24=hex24,
-                               ac_lat=ac_lat, ac_lon=ac_lon,
+                               ac_lat=ac_lat, ac_lon=ac_lon, ac_track=ac_track,
                                fms_orig=fms_orig, fms_dest=fms_dest)
             self._json(200, result or {})
             if result:

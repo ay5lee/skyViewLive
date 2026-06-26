@@ -802,7 +802,9 @@ function fetchRoute(callsign, mktFlight, ac) {
   let url = PROXY + '/route?flight=' + encodeURIComponent(key)
     + '&cs=' + encodeURIComponent(callsign || key)
     + '&hex=' + encodeURIComponent(hex);
+  const track = (ac && ac.track != null) ? Math.round(ac.track) : '';
   if (lat) url += '&lat=' + lat + '&lon=' + lon;
+  if (track !== '') url += '&track=' + track;
   if (fmsDep) url += '&fms_orig=' + encodeURIComponent(fmsDep);
   if (fmsArr)  url += '&fms_dest=' + encodeURIComponent(fmsArr);
 
