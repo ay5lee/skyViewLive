@@ -173,6 +173,21 @@ def icao_to_info(icao):
         return info[0], info[1], info[2], info[3]
     return icao.upper(), '', None, None
 
+# Reverse index: IATA → (iata, city, lat, lon) for resolving FMS codes
+_IATA_INDEX = {v[0]: v for v in AIRPORTS.values()}
+
+def iata_to_info(code):
+    """Resolve a 3-letter IATA or 4-letter ICAO code to (iata, city, lat, lon)."""
+    if not code:
+        return None, None, None, None
+    code = code.upper()
+    if len(code) == 4:
+        return icao_to_info(code)
+    info = _IATA_INDEX.get(code)
+    if info:
+        return info[0], info[1], info[2], info[3]
+    return code, '', None, None
+
 
 def nearest_airport(lat, lon, max_dist_km=150):
     """Return (icao, iata, city, lat, lon) of nearest airport within max_dist_km, or None."""
@@ -249,27 +264,28 @@ def get_route(mkt_flight, icao_callsign=None, hex24=None, ac_lat=None, ac_lon=No
     result = None
 
     # Step 0: FMS data broadcast by the aircraft itself — most accurate source
-    if fms_orig:
-        orig_iata, orig_city, orig_lat, orig_lon = icao_to_info(fms_orig)
-        dest_iata = dest_city = dest_lat = dest_lon = None
-        if fms_dest:
-            dest_iata, dest_city, dest_lat, dest_lon = icao_to_info(fms_dest)
-        result = {
-            'orig':      orig_iata,
-            'orig_city': orig_city or '',
-            'orig_lat':  orig_lat,
-            'orig_lon':  orig_lon,
-            'dest':      dest_iata,
-            'dest_city': dest_city or '',
-            'dest_lat':  dest_lat,
-            'dest_lon':  dest_lon,
-            'source':    'fms',
-            'verified':  True,
-        }
-        print(f"  ✈  {key}: FMS route {fms_orig}→{fms_dest or '?'}")
-        _route_cache[key] = result
-        _persist_cache_if_needed()
-        return result
+    if fms_orig and fms_dest and fms_orig.upper() != fms_dest.upper():
+        orig_iata, orig_city, orig_lat, orig_lon = iata_to_info(fms_orig)
+        dest_iata, dest_city, dest_lat, dest_lon = iata_to_info(fms_dest)
+        if orig_iata and dest_iata and orig_iata != dest_iata:
+            result = {
+                'orig':      orig_iata,
+                'orig_city': orig_city or '',
+                'orig_lat':  orig_lat,
+                'orig_lon':  orig_lon,
+                'dest':      dest_iata,
+                'dest_city': dest_city or '',
+                'dest_lat':  dest_lat,
+                'dest_lon':  dest_lon,
+                'source':    'fms',
+                'verified':  True,
+            }
+            print(f"  ✈  {key}: FMS route {orig_iata}→{dest_iata}")
+            _route_cache[key] = result
+            _persist_cache_if_needed()
+            return result
+        else:
+            print(f"  ✗  {key}: FMS same-airport or unresolved ({fms_orig}→{fms_dest}), skipping")
 
     # Step 1: adsbdb
     cs = (icao_callsign or key).upper()
