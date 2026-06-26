@@ -312,15 +312,24 @@ def get_route(mkt_flight, icao_callsign=None, hex24=None, ac_lat=None, ac_lon=No
             orig_code = o.get('iata_code') or o.get('icao_code')
             dest_code = de.get('iata_code') or de.get('icao_code')
             if orig_code and dest_code and orig_code != dest_code:
+                orig_iata, orig_city, orig_lat, orig_lon = iata_to_info(orig_code)
+                dest_iata, dest_city, dest_lat, dest_lon = iata_to_info(dest_code)
+                # Prefer adsbdb coords only when we don't have the airport in our table
+                if orig_lat is None:
+                    orig_lat = o.get('latitude');  orig_lon = o.get('longitude')
+                    orig_city = o.get('municipality') or o.get('name', '')
+                if dest_lat is None:
+                    dest_lat = de.get('latitude');  dest_lon = de.get('longitude')
+                    dest_city = de.get('municipality') or de.get('name', '')
                 result = {
-                    'orig':      orig_code,
-                    'orig_city': o.get('municipality') or o.get('name', ''),
-                    'orig_lat':  o.get('latitude'),
-                    'orig_lon':  o.get('longitude'),
-                    'dest':      dest_code,
-                    'dest_city': de.get('municipality') or de.get('name', ''),
-                    'dest_lat':  de.get('latitude'),
-                    'dest_lon':  de.get('longitude'),
+                    'orig':      orig_iata or orig_code,
+                    'orig_city': orig_city or '',
+                    'orig_lat':  orig_lat,
+                    'orig_lon':  orig_lon,
+                    'dest':      dest_iata or dest_code,
+                    'dest_city': dest_city or '',
+                    'dest_lat':  dest_lat,
+                    'dest_lon':  dest_lon,
                     'source':    'adsbdb',
                     'verified':  False,
                 }
