@@ -329,33 +329,9 @@ def get_route(mkt_flight, icao_callsign=None, hex24=None, ac_lat=None, ac_lon=No
     except Exception:
         pass
 
-    # Step 2: verify origin against GPS track (most reliable — uses observed positions)
-    if result and hex24:
-        track_orig = origin_from_track(hex24)
-        if track_orig:
-            iata, city, tlat, tlon = track_orig
-            claimed_lat = result.get('orig_lat')
-            claimed_lon = result.get('orig_lon')
-            if claimed_lat is not None:
-                track_d = dist_km(tlat, tlon, claimed_lat, claimed_lon)
-                if track_d > 200:   # track says different airport than adsbdb
-                    print(f"    ✓ {key}: track origin {iata} overrides adsbdb {result['orig']}")
-                    result.update({'orig': iata, 'orig_city': city,
-                                   'orig_lat': tlat, 'orig_lon': tlon,
-                                   'source': 'track+adsbdb', 'verified': True})
-                else:
-                    result['verified'] = True
-            else:
-                result.update({'orig': iata, 'orig_city': city,
-                               'orig_lat': tlat, 'orig_lon': tlon,
-                               'source': 'track', 'verified': True})
-        # After any track override, discard if origin and destination are now the same
-        if result and result.get('orig') and result.get('orig') == result.get('dest'):
-            print(f"    ✗ {key}: track override created same-airport route ({result['orig']}→{result['dest']}), discarding dest")
-            result['dest'] = None
-            result['dest_city'] = None
-            result['dest_lat'] = None
-            result['dest_lon'] = None
+    # (Track-based origin override removed: we usually first see arriving flights
+    #  already near their destination, so origin_from_track() incorrectly returns
+    #  the destination airport as the origin.)
 
     # Step 3: geometric sanity check — plane must lie roughly on the claimed route
     if result and ac_lat is not None and result.get('orig_lat') and not result.get('verified'):
