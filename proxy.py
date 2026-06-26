@@ -278,18 +278,23 @@ def get_route(mkt_flight, icao_callsign=None, hex24=None, ac_lat=None, ac_lon=No
         fr = d.get('response', {}).get('flightroute')
         if fr and fr.get('origin') and fr.get('destination'):
             o = fr['origin']; de = fr['destination']
-            result = {
-                'orig':      o.get('iata_code')  or o.get('icao_code'),
-                'orig_city': o.get('municipality') or o.get('name', ''),
-                'orig_lat':  o.get('latitude'),
-                'orig_lon':  o.get('longitude'),
-                'dest':      de.get('iata_code') or de.get('icao_code'),
-                'dest_city': de.get('municipality') or de.get('name', ''),
-                'dest_lat':  de.get('latitude'),
-                'dest_lon':  de.get('longitude'),
-                'source':    'adsbdb',
-                'verified':  False,
-            }
+            orig_code = o.get('iata_code') or o.get('icao_code')
+            dest_code = de.get('iata_code') or de.get('icao_code')
+            if orig_code and dest_code and orig_code != dest_code:
+                result = {
+                    'orig':      orig_code,
+                    'orig_city': o.get('municipality') or o.get('name', ''),
+                    'orig_lat':  o.get('latitude'),
+                    'orig_lon':  o.get('longitude'),
+                    'dest':      dest_code,
+                    'dest_city': de.get('municipality') or de.get('name', ''),
+                    'dest_lat':  de.get('latitude'),
+                    'dest_lon':  de.get('longitude'),
+                    'source':    'adsbdb',
+                    'verified':  False,
+                }
+            elif orig_code and orig_code == dest_code:
+                print(f"  ✗  {key}: adsbdb same-airport route ({orig_code}→{dest_code}), ignoring")
     except Exception:
         pass
 
@@ -323,10 +328,13 @@ def get_route(mkt_flight, icao_callsign=None, hex24=None, ac_lat=None, ac_lon=No
         if dest_lat is not None:
             route_len = dist_km(orig_lat, orig_lon, dest_lat, dest_lon)
             d_to_dest = dist_km(ac_lat, ac_lon, dest_lat, dest_lon)
+            # Same-airport route is always bad data
+            if route_len < 50:
+                stale = True
             # A plane on the route satisfies: d_to_orig + d_to_dest ≈ route_len.
             # If the triangle inequality excess is >60% of route_len, the plane
             # is not on this route (wrong origin or destination).
-            if route_len > 100 and (d_to_orig + d_to_dest) > route_len * 1.6:
+            elif (d_to_orig + d_to_dest) > route_len * 1.6:
                 stale = True
         else:
             if d_to_orig > 12000:
