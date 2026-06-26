@@ -238,7 +238,8 @@ def _persist_cache_if_needed():
         _save_cache()
 
 
-def get_route(mkt_flight, icao_callsign=None, hex24=None, ac_lat=None, ac_lon=None):
+def get_route(mkt_flight, icao_callsign=None, hex24=None, ac_lat=None, ac_lon=None,
+              fms_orig=None, fms_dest=None):
     key = (mkt_flight or '').upper().strip()
     if not key:
         return None
@@ -246,6 +247,29 @@ def get_route(mkt_flight, icao_callsign=None, hex24=None, ac_lat=None, ac_lon=No
         return _route_cache[key]
 
     result = None
+
+    # Step 0: FMS data broadcast by the aircraft itself — most accurate source
+    if fms_orig:
+        orig_iata, orig_city, orig_lat, orig_lon = icao_to_info(fms_orig)
+        dest_iata = dest_city = dest_lat = dest_lon = None
+        if fms_dest:
+            dest_iata, dest_city, dest_lat, dest_lon = icao_to_info(fms_dest)
+        result = {
+            'orig':      orig_iata,
+            'orig_city': orig_city or '',
+            'orig_lat':  orig_lat,
+            'orig_lon':  orig_lon,
+            'dest':      dest_iata,
+            'dest_city': dest_city or '',
+            'dest_lat':  dest_lat,
+            'dest_lon':  dest_lon,
+            'source':    'fms',
+            'verified':  True,
+        }
+        print(f"  ✈  {key}: FMS route {fms_orig}→{fms_dest or '?'}")
+        _route_cache[key] = result
+        _persist_cache_if_needed()
+        return result
 
     # Step 1: adsbdb
     cs = (icao_callsign or key).upper()
@@ -424,9 +448,11 @@ class ProxyHandler(BaseHTTPRequestHandler):
             return
 
         if parsed.path == '/route':
-            flight = params.get('flight', [''])[0].strip().upper()
-            cs     = params.get('cs',  [''])[0].strip().upper() or flight
-            hex24  = params.get('hex', [''])[0].strip().lower()
+            flight   = params.get('flight', [''])[0].strip().upper()
+            cs       = params.get('cs',  [''])[0].strip().upper() or flight
+            hex24    = params.get('hex', [''])[0].strip().lower()
+            fms_orig = params.get('fms_orig', [''])[0].strip().upper() or None
+            fms_dest = params.get('fms_dest', [''])[0].strip().upper() or None
             try:
                 ac_lat = float(params['lat'][0]) if 'lat' in params else None
                 ac_lon = float(params['lon'][0]) if 'lon' in params else None
@@ -437,7 +463,8 @@ class ProxyHandler(BaseHTTPRequestHandler):
                 self._json(400, {'error': 'missing flight param'}); return
 
             result = get_route(flight, icao_callsign=cs, hex24=hex24,
-                               ac_lat=ac_lat, ac_lon=ac_lon)
+                               ac_lat=ac_lat, ac_lon=ac_lon,
+                               fms_orig=fms_orig, fms_dest=fms_dest)
             self._json(200, result or {})
             if result:
                 v = '✓' if result.get('verified') else '?'
