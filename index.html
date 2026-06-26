@@ -805,7 +805,7 @@ function fetchRoute(callsign, mktFlight, ac) {
   const promise = fetch(url)
     .then(function(r) { return r.ok ? r.json() : null; })
     .then(function(d) {
-      if (!d || !d.orig) { routeCache[key] = null; delete routePromises[key]; return null; }
+      if (!d || !d.orig) { delete routePromises[key]; return null; }
       const fr = {
         origin:      {iata_code: d.orig, municipality: d.orig_city || d.orig},
         destination: d.dest ? {iata_code: d.dest, municipality: d.dest_city || d.dest} : null,
@@ -818,7 +818,6 @@ function fetchRoute(callsign, mktFlight, ac) {
       return fr;
     })
     .catch(function() {
-      routeCache[key] = null;
       delete routePromises[key];
       return null;
     });

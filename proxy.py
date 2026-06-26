@@ -303,8 +303,9 @@ def get_route(mkt_flight, icao_callsign=None, hex24=None, ac_lat=None, ac_lon=No
         else:
             result['verified'] = True
 
-    _route_cache[key] = result
-    _persist_cache_if_needed()
+    if result is not None:
+        _route_cache[key] = result
+        _persist_cache_if_needed()
     return result
 
 
