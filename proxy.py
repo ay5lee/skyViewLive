@@ -105,12 +105,27 @@ CACHE_FILE = os.path.join(os.path.dirname(__file__), 'route_cache.json')
 _route_cache = {}
 _cache_dirty = 0   # count of unsaved new entries
 
+def _is_valid_route(r):
+    """Return False for known-bad cache entries so they get re-fetched."""
+    if not r:
+        return False
+    orig = r.get('orig')
+    dest = r.get('dest')
+    if not orig:
+        return False
+    if dest and orig == dest:
+        return False
+    return True
+
 def _load_cache():
     global _route_cache
     try:
         with open(CACHE_FILE, 'r') as f:
-            _route_cache = json.load(f)
-        print(f"  📂 Loaded {len(_route_cache)} cached routes from disk")
+            raw = json.load(f)
+        _route_cache = {k: v for k, v in raw.items() if _is_valid_route(v)}
+        skipped = len(raw) - len(_route_cache)
+        print(f"  📂 Loaded {len(_route_cache)} cached routes from disk"
+              + (f" (dropped {skipped} invalid)" if skipped else ""))
     except FileNotFoundError:
         pass
     except Exception as e:
