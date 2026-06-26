@@ -204,17 +204,28 @@ def origin_from_track(hex24):
 
 def _correct_origin_async(key, result, hex24, ac_lat, ac_lon):
     """Background thread: validate origin via OpenSky and update cache if stale."""
+    # Snapshot the dict to avoid mutating the copy already returned to the client
+    snapshot = dict(result)
     def run():
         dep_icao = get_opensky_departure(hex24)
         if dep_icao:
             iata, city, lat, lon = icao_to_info(dep_icao)
-            result.update({'orig': iata, 'orig_city': city,
-                           'orig_lat': lat, 'orig_lon': lon,
-                           'source': 'opensky+adsbdb', 'verified': True})
+            snapshot.update({'orig': iata, 'orig_city': city,
+                             'orig_lat': lat, 'orig_lon': lon,
+                             'source': 'opensky+adsbdb', 'verified': True})
             print(f"    ✓ {key}: corrected origin → {iata} (OpenSky)")
         else:
-            result['verified'] = False
-        _route_cache[key] = result
+            # OpenSky has nothing — nearest airport to current position is best guess for origin
+            apt = nearest_airport(ac_lat, ac_lon, max_dist_km=300) if ac_lat is not None else None
+            if apt:
+                iata, city, alat, alon = apt[1], apt[2], apt[3], apt[4]
+                snapshot.update({'orig': iata, 'orig_city': city,
+                                 'orig_lat': alat, 'orig_lon': alon,
+                                 'source': 'geo-fallback', 'verified': False})
+                print(f"    ~ {key}: geo-fallback origin → {iata}")
+            else:
+                snapshot['verified'] = False
+        _route_cache[key] = snapshot
         _persist_cache_if_needed()
     threading.Thread(target=run, daemon=True).start()
 
@@ -266,8 +277,8 @@ def get_route(mkt_flight, icao_callsign=None, hex24=None, ac_lat=None, ac_lon=No
             claimed_lat = result.get('orig_lat')
             claimed_lon = result.get('orig_lon')
             if claimed_lat is not None:
-                d = dist_km(tlat, tlon, claimed_lat, claimed_lon)
-                if d > 200:   # track says different airport than adsbdb
+                track_d = dist_km(tlat, tlon, claimed_lat, claimed_lon)
+                if track_d > 200:   # track says different airport than adsbdb
                     print(f"    ✓ {key}: track origin {iata} overrides adsbdb {result['orig']}")
                     result.update({'orig': iata, 'orig_city': city,
                                    'orig_lat': tlat, 'orig_lon': tlon,
@@ -279,26 +290,26 @@ def get_route(mkt_flight, icao_callsign=None, hex24=None, ac_lat=None, ac_lon=No
                                'orig_lat': tlat, 'orig_lon': tlon,
                                'source': 'track', 'verified': True})
 
-    # Step 3: geometric sanity check — only flag stale if plane is off the route entirely
+    # Step 3: geometric sanity check — plane must lie roughly on the claimed route
     if result and ac_lat is not None and result.get('orig_lat') and not result.get('verified'):
         orig_lat = result['orig_lat']; orig_lon = result['orig_lon']
         dest_lat = result.get('dest_lat'); dest_lon = result.get('dest_lon')
         d_to_orig = dist_km(ac_lat, ac_lon, orig_lat, orig_lon)
         stale = False
         if dest_lat is not None:
-            # Plane should be somewhere between origin and destination.
-            # If it's further from origin than the total route length it's suspicious.
             route_len = dist_km(orig_lat, orig_lon, dest_lat, dest_lon)
             d_to_dest = dist_km(ac_lat, ac_lon, dest_lat, dest_lon)
-            # If the plane is far from BOTH endpoints relative to route length, route is wrong
-            if d_to_orig > route_len * 1.3 and d_to_dest > route_len * 1.3:
+            # A plane on the route satisfies: d_to_orig + d_to_dest ≈ route_len.
+            # If the triangle inequality excess is >60% of route_len, the plane
+            # is not on this route (wrong origin or destination).
+            if route_len > 100 and (d_to_orig + d_to_dest) > route_len * 1.6:
                 stale = True
         else:
-            # No destination: only flag if origin is a different continent (>12000km)
             if d_to_orig > 12000:
                 stale = True
         if stale and hex24:
-            print(f"    ⚠ {key}: plane doesn't lie on {result['orig']}→{result.get('dest','?')} — correcting in background")
+            print(f"    ⚠ {key}: plane not on {result['orig']}→{result.get('dest','?')} "
+                  f"(route {route_len:.0f}km, d_orig {d_to_orig:.0f}km, d_dest {d_to_dest:.0f}km) — correcting")
             _correct_origin_async(key, result, hex24, ac_lat, ac_lon)
         else:
             result['verified'] = True
