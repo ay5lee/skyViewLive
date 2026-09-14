@@ -101,7 +101,7 @@ AIRPORTS = {
     'MMMX':('MEX','Mexico City',  19.4363, -99.0721),
 }
 
-CACHE_FILE = os.path.join(os.path.dirname(__file__), 'route_cache.json')
+CACHE_FILE = os.path.join(os.path.dirname(__file__), 'cache', 'route_cache.json')
 _route_cache = {}
 _cache_dirty = 0   # count of unsaved new entries
 
@@ -121,6 +121,7 @@ def _is_valid_route(r):
 
 def _load_cache():
     global _route_cache
+    os.makedirs(os.path.dirname(CACHE_FILE), exist_ok=True)
     try:
         with open(CACHE_FILE, 'r') as f:
             raw = json.load(f)

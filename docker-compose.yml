@@ -9,7 +9,10 @@ services:
       - HTTPS_PROXY=${HTTPS_PROXY:-}
       - NO_PROXY=${NO_PROXY:-}
     volumes:
-      - ./route_cache.json:/app/route_cache.json
+      - route_cache:/app/cache
+
+volumes:
+  route_cache:
 
   frontend:
     build:
