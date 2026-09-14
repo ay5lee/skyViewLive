@@ -806,19 +806,25 @@ function fetchRoute(callsign, mktFlight, ac) {
   if (key in routeCache) return Promise.resolve(routeCache[key]);
   if (key in routePromises) return routePromises[key];
 
-  const hex = (ac && ac.hex) ? ac.hex : '';
-  const lat = (ac && ac.lat != null) ? ac.lat.toFixed(4) : '';
-  const lon = (ac && ac.lon != null) ? ac.lon.toFixed(4) : '';
+  const hex     = (ac && ac.hex) ? ac.hex : '';
+  const lat     = (ac && ac.lat != null) ? ac.lat.toFixed(4) : '';
+  const lon     = (ac && ac.lon != null) ? ac.lon.toFixed(4) : '';
+  const fmsDep  = (ac && ac.dep) ? ac.dep.trim() : '';   // ICAO dep from ADS-B FMS
+  const fmsArr  = (ac && ac.arr) ? ac.arr.trim() : '';   // ICAO arr from ADS-B FMS
 
   let url = PROXY + '/route?flight=' + encodeURIComponent(key)
     + '&cs=' + encodeURIComponent(callsign || key)
     + '&hex=' + encodeURIComponent(hex);
+  const track = (ac && ac.track != null) ? Math.round(ac.track) : '';
   if (lat) url += '&lat=' + lat + '&lon=' + lon;
+  if (track !== '') url += '&track=' + track;
+  if (fmsDep) url += '&fms_orig=' + encodeURIComponent(fmsDep);
+  if (fmsArr)  url += '&fms_dest=' + encodeURIComponent(fmsArr);
 
   const promise = fetch(url)
     .then(function(r) { return r.ok ? r.json() : null; })
     .then(function(d) {
-      if (!d || !d.orig) { routeCache[key] = null; delete routePromises[key]; return null; }
+      if (!d || !d.orig) { delete routePromises[key]; return null; }
       const fr = {
         origin:      {iata_code: d.orig, municipality: d.orig_city || d.orig},
         destination: d.dest ? {iata_code: d.dest, municipality: d.dest_city || d.dest} : null,
@@ -831,7 +837,6 @@ function fetchRoute(callsign, mktFlight, ac) {
       return fr;
     })
     .catch(function() {
-      routeCache[key] = null;
       delete routePromises[key];
       return null;
     });
