@@ -6,6 +6,15 @@
 <title>SkyView Live — Global Flight Tracker</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/leaflet.gridlayer.googlemutant@0.13.4/dist/Leaflet.GoogleMutant.js"></script>
+<script src="/config.js"></script>
+<script>
+  if (window.GOOGLE_MAPS_KEY) {
+    var s = document.createElement('script');
+    s.src = 'https://maps.googleapis.com/maps/api/js?key=' + window.GOOGLE_MAPS_KEY;
+    document.head.appendChild(s);
+  }
+</script>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -556,10 +565,14 @@ function makeIcon(hdg, color, label, logoIata, route, category) {
 
 // ── Map ───────────────────────────────────────────────────────────────────────
 const map = L.map('map', {center:[22.32,114.17], zoom:10, zoomControl:true});
-L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-  attribution:'&copy; OpenStreetMap &copy; CARTO',
-  subdomains:'abcd', maxZoom:19,
-}).addTo(map);
+if (window.GOOGLE_MAPS_KEY) {
+  L.gridLayer.googleMutant({type: 'roadmap'}).addTo(map);
+} else {
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    maxZoom:19,
+  }).addTo(map);
+}
 
 const markers  = {};
 const acData   = {};

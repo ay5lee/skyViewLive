@@ -1,4 +1,6 @@
 route_cache.json
+config.js
+.env
 __pycache__/
 *.pyc
 .DS_Store

@@ -14,5 +14,7 @@ services:
     restart: unless-stopped
     ports:
       - "8080:80"
+    environment:
+      - GOOGLE_MAPS_KEY=${GOOGLE_MAPS_KEY}
     depends_on:
       - proxy
