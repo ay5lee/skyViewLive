@@ -4,15 +4,8 @@ services:
       context: .
       dockerfile: Dockerfile.proxy
     restart: unless-stopped
-    environment:
-      - HTTP_PROXY=${HTTP_PROXY:-}
-      - HTTPS_PROXY=${HTTPS_PROXY:-}
-      - NO_PROXY=${NO_PROXY:-}
     volumes:
       - route_cache:/app/cache
-
-volumes:
-  route_cache:
 
   frontend:
     build:
@@ -25,3 +18,6 @@ volumes:
       - GOOGLE_MAPS_KEY=${GOOGLE_MAPS_KEY}
     depends_on:
       - proxy
+
+volumes:
+  route_cache:
