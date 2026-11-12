@@ -1,0 +1,1252 @@
+{
+  "AAL": {
+    "name": "American Airlines",
+    "iata": "AA",
+    "color": "#0078D2"
+  },
+  "AAR": {
+    "name": "Asiana Airlines",
+    "iata": "OZ",
+    "color": "#CC0000"
+  },
+  "AAY": {
+    "name": "Allegiant Air",
+    "iata": "G4",
+    "color": "#FFD100"
+  },
+  "ABL": {
+    "name": "Air Busan",
+    "iata": "BX",
+    "color": "#003087"
+  },
+  "ABW": {
+    "name": "AirBridgeCargo",
+    "iata": "RU",
+    "color": "#1A365D"
+  },
+  "ABX": {
+    "name": "ABX Air",
+    "iata": "GB",
+    "color": "#334155"
+  },
+  "ABY": {
+    "name": "Air Arabia",
+    "iata": "G9",
+    "color": "#CC0000"
+  },
+  "ACA": {
+    "name": "Air Canada",
+    "iata": "AC",
+    "color": "#CC0000"
+  },
+  "ADO": {
+    "name": "Air Do",
+    "iata": "HD",
+    "color": "#003087"
+  },
+  "ADR": {
+    "name": "Adria Airways",
+    "iata": "JP",
+    "color": "#003087"
+  },
+  "AFL": {
+    "name": "Aeroflot",
+    "iata": "SU",
+    "color": "#CC0000"
+  },
+  "AFR": {
+    "name": "Air France",
+    "iata": "AF",
+    "color": "#002395"
+  },
+  "AHY": {
+    "name": "Azerbaijan Airlines",
+    "iata": "J2",
+    "color": "#003087"
+  },
+  "AIC": {
+    "name": "Air India",
+    "iata": "AI",
+    "color": "#CC0000"
+  },
+  "AIQ": {
+    "name": "Thai AirAsia",
+    "iata": "FD",
+    "color": "#FF0000"
+  },
+  "AJT": {
+    "name": "Amerijet",
+    "iata": "M6",
+    "color": "#334155"
+  },
+  "AJX": {
+    "name": "Air Japan",
+    "iata": "NQ",
+    "color": "#003087"
+  },
+  "AKJ": {
+    "name": "Akasa Air",
+    "iata": "QP",
+    "color": "#FF6600"
+  },
+  "AMU": {
+    "name": "Air Macau",
+    "iata": "NX",
+    "color": "#006400"
+  },
+  "AMX": {
+    "name": "Aeromexico",
+    "iata": "AM",
+    "color": "#003087"
+  },
+  "ANA": {
+    "name": "All Nippon Airways",
+    "iata": "NH",
+    "color": "#003087"
+  },
+  "ANE": {
+    "name": "Air Nostrum",
+    "iata": "YW",
+    "color": "#CC0000"
+  },
+  "ANZ": {
+    "name": "Air New Zealand",
+    "iata": "NZ",
+    "color": "#003087"
+  },
+  "APJ": {
+    "name": "Peach Aviation",
+    "iata": "MM",
+    "color": "#CC0066"
+  },
+  "ARG": {
+    "name": "Aerolineas Argentinas",
+    "iata": "AR",
+    "color": "#003087"
+  },
+  "ASA": {
+    "name": "Alaska Airlines",
+    "iata": "AS",
+    "color": "#01426A"
+  },
+  "ASH": {
+    "name": "Mesa Airlines",
+    "iata": "YV",
+    "color": "#002244"
+  },
+  "ASQ": {
+    "name": "ExpressJet",
+    "iata": "EV",
+    "color": "#002244"
+  },
+  "ATN": {
+    "name": "Air Transport Intl",
+    "iata": "8C",
+    "color": "#334155"
+  },
+  "AUA": {
+    "name": "Austrian Airlines",
+    "iata": "OS",
+    "color": "#CC0000"
+  },
+  "AVA": {
+    "name": "Avianca",
+    "iata": "AV",
+    "color": "#CC0000"
+  },
+  "AWQ": {
+    "name": "Indonesia AirAsia",
+    "iata": "QZ",
+    "color": "#FF0000"
+  },
+  "AXM": {
+    "name": "AirAsia X",
+    "iata": "D7",
+    "color": "#FF0000"
+  },
+  "AZG": {
+    "name": "Silk Way Airlines",
+    "iata": "ZP",
+    "color": "#1A365D"
+  },
+  "BAV": {
+    "name": "Beijing Capital Air",
+    "iata": "JD",
+    "color": "#003087"
+  },
+  "BAW": {
+    "name": "British Airways",
+    "iata": "BA",
+    "color": "#075AAA"
+  },
+  "BBC": {
+    "name": "Biman Bangladesh",
+    "iata": "BG",
+    "color": "#006600"
+  },
+  "BCI": {
+    "name": "Blue Islands",
+    "iata": "SI",
+    "color": "#003087"
+  },
+  "BCS": {
+    "name": "European Air Transport",
+    "iata": "QY",
+    "color": "#FFCC00"
+  },
+  "BEL": {
+    "name": "Brussels Airlines",
+    "iata": "SN",
+    "color": "#CC0000"
+  },
+  "BKP": {
+    "name": "Bangkok Airways",
+    "iata": "PG",
+    "color": "#6A0DAD"
+  },
+  "BKV": {
+    "name": "Bangkok Airways",
+    "iata": "PG",
+    "color": "#6A0DAD"
+  },
+  "BMA": {
+    "name": "bmi Regional",
+    "iata": "BM",
+    "color": "#003087"
+  },
+  "BOX": {
+    "name": "Aerologic",
+    "iata": "3S",
+    "color": "#1A365D"
+  },
+  "BRU": {
+    "name": "Belavia",
+    "iata": "B2",
+    "color": "#003087"
+  },
+  "BTK": {
+    "name": "Batik Air",
+    "iata": "ID",
+    "color": "#CC0000"
+  },
+  "CAL": {
+    "name": "China Airlines",
+    "iata": "CI",
+    "color": "#CC0000"
+  },
+  "CAO": {
+    "name": "Air China Cargo",
+    "iata": "CA",
+    "color": "#CC0000"
+  },
+  "CBJ": {
+    "name": "Beijing Capital Air",
+    "iata": "JD",
+    "color": "#003087"
+  },
+  "CCA": {
+    "name": "Air China",
+    "iata": "CA",
+    "color": "#CC0000"
+  },
+  "CDC": {
+    "name": "Loong Air",
+    "iata": "GJ",
+    "color": "#003087"
+  },
+  "CDG": {
+    "name": "Shandong Airlines",
+    "iata": "SC",
+    "color": "#003087"
+  },
+  "CEB": {
+    "name": "Cebu Pacific",
+    "iata": "5J",
+    "color": "#D4A017"
+  },
+  "CES": {
+    "name": "China Eastern",
+    "iata": "MU",
+    "color": "#CC0000"
+  },
+  "CFE": {
+    "name": "BA CityFlyer",
+    "iata": "CJ",
+    "color": "#075AAA"
+  },
+  "CFG": {
+    "name": "Condor",
+    "iata": "DE",
+    "color": "#FFD100"
+  },
+  "CGN": {
+    "name": "Chang'an Airlines",
+    "iata": "9H",
+    "color": "#CC0000"
+  },
+  "CHH": {
+    "name": "Hainan Airlines",
+    "iata": "HU",
+    "color": "#CC0000"
+  },
+  "CJK": {
+    "name": "Juneyao Air",
+    "iata": "HO",
+    "color": "#CC0000"
+  },
+  "CKK": {
+    "name": "China Cargo Airlines",
+    "iata": "CK",
+    "color": "#334155"
+  },
+  "CKL": {
+    "name": "Cargolux Italia",
+    "iata": "C8",
+    "color": "#003087"
+  },
+  "CKS": {
+    "name": "Kalitta Air",
+    "iata": "K4",
+    "color": "#1A365D"
+  },
+  "CLX": {
+    "name": "Cargolux",
+    "iata": "CV",
+    "color": "#003087"
+  },
+  "CMP": {
+    "name": "Copa Airlines",
+    "iata": "CM",
+    "color": "#003087"
+  },
+  "CPA": {
+    "name": "Cathay Pacific",
+    "iata": "CX",
+    "color": "#006564"
+  },
+  "CPZ": {
+    "name": "Compass Airlines",
+    "iata": "CP",
+    "color": "#CC0000"
+  },
+  "CQH": {
+    "name": "Spring Airlines",
+    "iata": "9C",
+    "color": "#FF6600"
+  },
+  "CQN": {
+    "name": "Chongqing Airlines",
+    "iata": "OQ",
+    "color": "#CC0000"
+  },
+  "CRK": {
+    "name": "Hong Kong Airlines",
+    "iata": "HX",
+    "color": "#CC0000"
+  },
+  "CSA": {
+    "name": "Czech Airlines",
+    "iata": "OK",
+    "color": "#CC0000"
+  },
+  "CSC": {
+    "name": "Sichuan Airlines",
+    "iata": "3U",
+    "color": "#CC0000"
+  },
+  "CSG": {
+    "name": "China Southern Cargo",
+    "iata": "CZ",
+    "color": "#003087"
+  },
+  "CSN": {
+    "name": "China Southern",
+    "iata": "CZ",
+    "color": "#003087"
+  },
+  "CSS": {
+    "name": "Donghai Airlines",
+    "iata": "8L",
+    "color": "#003087"
+  },
+  "CSZ": {
+    "name": "Shenzhen Airlines",
+    "iata": "ZH",
+    "color": "#003087"
+  },
+  "CTN": {
+    "name": "Croatia Airlines",
+    "iata": "OU",
+    "color": "#003087"
+  },
+  "CTV": {
+    "name": "Citilink",
+    "iata": "QG",
+    "color": "#006600"
+  },
+  "CUA": {
+    "name": "China United Airlines",
+    "iata": "KN",
+    "color": "#CC0000"
+  },
+  "CXA": {
+    "name": "Xiamen Air",
+    "iata": "MF",
+    "color": "#003087"
+  },
+  "CYH": {
+    "name": "Colorful Guizhou",
+    "iata": "GY",
+    "color": "#003087"
+  },
+  "DAH": {
+    "name": "Air Algerie",
+    "iata": "AH",
+    "color": "#CC0000"
+  },
+  "DAL": {
+    "name": "Delta Air Lines",
+    "iata": "DL",
+    "color": "#CC0000"
+  },
+  "DHK": {
+    "name": "DHL Air",
+    "iata": "D0",
+    "color": "#FFCC00"
+  },
+  "DKH": {
+    "name": "Kunming Airlines",
+    "iata": "KN",
+    "color": "#003087"
+  },
+  "DLH": {
+    "name": "Lufthansa",
+    "iata": "LH",
+    "color": "#05164D"
+  },
+  "EAG": {
+    "name": "Eagle Airways",
+    "iata": "NZ",
+    "color": "#003087"
+  },
+  "EDV": {
+    "name": "Endeavor Air",
+    "iata": "9E",
+    "color": "#CC0000"
+  },
+  "EIN": {
+    "name": "Aer Lingus",
+    "iata": "EI",
+    "color": "#006600"
+  },
+  "EJU": {
+    "name": "easyJet Europe",
+    "iata": "EC",
+    "color": "#FF6600"
+  },
+  "ELL": {
+    "name": "Aegean Airlines",
+    "iata": "A3",
+    "color": "#003087"
+  },
+  "ENY": {
+    "name": "Envoy Air",
+    "iata": "MQ",
+    "color": "#0078D2"
+  },
+  "ESR": {
+    "name": "Eastar Jet",
+    "iata": "ZE",
+    "color": "#FF6600"
+  },
+  "ETD": {
+    "name": "Etihad Airways",
+    "iata": "EY",
+    "color": "#B8962E"
+  },
+  "ETH": {
+    "name": "Ethiopian Airlines",
+    "iata": "ET",
+    "color": "#006600"
+  },
+  "EVA": {
+    "name": "EVA Air",
+    "iata": "BR",
+    "color": "#007C5E"
+  },
+  "EWG": {
+    "name": "Eurowings",
+    "iata": "EW",
+    "color": "#7C3AED"
+  },
+  "EXS": {
+    "name": "Jet2.com",
+    "iata": "LS",
+    "color": "#CC0000"
+  },
+  "EZS": {
+    "name": "easyJet Switzerland",
+    "iata": "DS",
+    "color": "#FF6600"
+  },
+  "EZY": {
+    "name": "easyJet",
+    "iata": "U2",
+    "color": "#FF6600"
+  },
+  "FDA": {
+    "name": "Fuji Dream Airlines",
+    "iata": "JH",
+    "color": "#CC0000"
+  },
+  "FDB": {
+    "name": "flydubai",
+    "iata": "FZ",
+    "color": "#FF6600"
+  },
+  "FDX": {
+    "name": "FedEx",
+    "iata": "FX",
+    "color": "#FF6600"
+  },
+  "FFT": {
+    "name": "Frontier Airlines",
+    "iata": "F9",
+    "color": "#006600"
+  },
+  "FIN": {
+    "name": "Finnair",
+    "iata": "AY",
+    "color": "#003087"
+  },
+  "FLE": {
+    "name": "Flair Airlines",
+    "iata": "F8",
+    "color": "#7C3AED"
+  },
+  "FLY": {
+    "name": "flybe",
+    "iata": "BE",
+    "color": "#7C3AED"
+  },
+  "FWI": {
+    "name": "Firefly",
+    "iata": "FY",
+    "color": "#FF6600"
+  },
+  "FZA": {
+    "name": "Fuzhou Airlines",
+    "iata": "FU",
+    "color": "#CC0000"
+  },
+  "GCR": {
+    "name": "Tianjin Airlines",
+    "iata": "G8",
+    "color": "#CC0000"
+  },
+  "GEC": {
+    "name": "Lufthansa Cargo",
+    "iata": "LH",
+    "color": "#05164D"
+  },
+  "GFA": {
+    "name": "Gulf Air",
+    "iata": "GF",
+    "color": "#CC0000"
+  },
+  "GIA": {
+    "name": "Garuda Indonesia",
+    "iata": "GA",
+    "color": "#003087"
+  },
+  "GJS": {
+    "name": "GoJet Airlines",
+    "iata": "G7",
+    "color": "#002244"
+  },
+  "GLO": {
+    "name": "GOL",
+    "iata": "G3",
+    "color": "#FF6600"
+  },
+  "GOW": {
+    "name": "Go First",
+    "iata": "G8",
+    "color": "#003087"
+  },
+  "GTI": {
+    "name": "Atlas Air",
+    "iata": "5Y",
+    "color": "#1A365D"
+  },
+  "GWI": {
+    "name": "Germanwings",
+    "iata": "4U",
+    "color": "#7C3AED"
+  },
+  "GXA": {
+    "name": "Guangxi Airways",
+    "iata": "GX",
+    "color": "#CC0000"
+  },
+  "HAL": {
+    "name": "Hawaiian Airlines",
+    "iata": "HA",
+    "color": "#7C3AED"
+  },
+  "HBH": {
+    "name": "Hebei Airlines",
+    "iata": "NS",
+    "color": "#CC0000"
+  },
+  "HGB": {
+    "name": "Greater Bay Airlines",
+    "iata": "HB",
+    "color": "#C60C30"
+  },
+  "HKC": {
+    "name": "HK Air Cargo",
+    "iata": "RH",
+    "color": "#334155"
+  },
+  "HKE": {
+    "name": "HK Express",
+    "iata": "UO",
+    "color": "#E4002B"
+  },
+  "HVN": {
+    "name": "Vietnam Airlines",
+    "iata": "VN",
+    "color": "#003087"
+  },
+  "HYN": {
+    "name": "Yunnan Hongtu Airlines",
+    "iata": "A6",
+    "color": "#CC0000"
+  },
+  "IAW": {
+    "name": "Iraqi Airways",
+    "iata": "IA",
+    "color": "#006600"
+  },
+  "IBE": {
+    "name": "Iberia",
+    "iata": "IB",
+    "color": "#CC0000"
+  },
+  "ICE": {
+    "name": "Icelandair",
+    "iata": "FI",
+    "color": "#003087"
+  },
+  "IGO": {
+    "name": "IndiGo",
+    "iata": "6E",
+    "color": "#003087"
+  },
+  "IRC": {
+    "name": "Iran Air",
+    "iata": "IR",
+    "color": "#003087"
+  },
+  "ITY": {
+    "name": "ITA Airways",
+    "iata": "AZ",
+    "color": "#006643"
+  },
+  "JAB": {
+    "name": "Jetstar Airways",
+    "iata": "JQ",
+    "color": "#FF6600"
+  },
+  "JAL": {
+    "name": "Japan Airlines",
+    "iata": "JL",
+    "color": "#CC0000"
+  },
+  "JAT": {
+    "name": "JetSMART",
+    "iata": "JA",
+    "color": "#FF6600"
+  },
+  "JBU": {
+    "name": "JetBlue",
+    "iata": "B6",
+    "color": "#003876"
+  },
+  "JIA": {
+    "name": "PSA Airlines",
+    "iata": "OH",
+    "color": "#0078D2"
+  },
+  "JJA": {
+    "name": "Jin Air",
+    "iata": "LJ",
+    "color": "#003087"
+  },
+  "JJP": {
+    "name": "Jetstar Japan",
+    "iata": "GK",
+    "color": "#FF6600"
+  },
+  "JSA": {
+    "name": "Jetstar Asia",
+    "iata": "3K",
+    "color": "#FF6600"
+  },
+  "JST": {
+    "name": "Jetstar Japan",
+    "iata": "GK",
+    "color": "#FF6600"
+  },
+  "JYH": {
+    "name": "9 Air",
+    "iata": "AQ",
+    "color": "#003087"
+  },
+  "JZA": {
+    "name": "Jazz Aviation",
+    "iata": "QK",
+    "color": "#CC0000"
+  },
+  "JZR": {
+    "name": "Jazeera Airways",
+    "iata": "J9",
+    "color": "#003087"
+  },
+  "KAL": {
+    "name": "Korean Air",
+    "iata": "KE",
+    "color": "#00256C"
+  },
+  "KHV": {
+    "name": "Cambodia Angkor Air",
+    "iata": "K6",
+    "color": "#003087"
+  },
+  "KLM": {
+    "name": "KLM",
+    "iata": "KL",
+    "color": "#00A1E0"
+  },
+  "KQA": {
+    "name": "Kenya Airways",
+    "iata": "KQ",
+    "color": "#CC0000"
+  },
+  "LAN": {
+    "name": "LATAM Airlines",
+    "iata": "LA",
+    "color": "#A100FF"
+  },
+  "LAO": {
+    "name": "Lao Airlines",
+    "iata": "QV",
+    "color": "#003087"
+  },
+  "LKE": {
+    "name": "Lucky Air",
+    "iata": "LK",
+    "color": "#003087"
+  },
+  "LNI": {
+    "name": "Lion Air",
+    "iata": "JT",
+    "color": "#CC0000"
+  },
+  "LOT": {
+    "name": "LOT Polish Airlines",
+    "iata": "LO",
+    "color": "#003087"
+  },
+  "MAS": {
+    "name": "Malaysia Airlines",
+    "iata": "MH",
+    "color": "#CC0000"
+  },
+  "MDA": {
+    "name": "Mandarin Airlines",
+    "iata": "AE",
+    "color": "#CC0000"
+  },
+  "MEA": {
+    "name": "Middle East Airlines",
+    "iata": "ME",
+    "color": "#006600"
+  },
+  "MGL": {
+    "name": "MIAT Mongolian",
+    "iata": "OM",
+    "color": "#003087"
+  },
+  "MNB": {
+    "name": "MNG Airlines",
+    "iata": "MB",
+    "color": "#334155"
+  },
+  "MNO": {
+    "name": "Mango",
+    "iata": "JE",
+    "color": "#FF6600"
+  },
+  "MSR": {
+    "name": "EgyptAir",
+    "iata": "MS",
+    "color": "#003087"
+  },
+  "MXA": {
+    "name": "Mexicana",
+    "iata": "MX",
+    "color": "#003087"
+  },
+  "MXD": {
+    "name": "Malindo Air",
+    "iata": "OD",
+    "color": "#003087"
+  },
+  "MYT": {
+    "name": "Myanmar Airways Intl",
+    "iata": "8M",
+    "color": "#003087"
+  },
+  "NAX": {
+    "name": "Norwegian",
+    "iata": "DY",
+    "color": "#D10069"
+  },
+  "NCA": {
+    "name": "Nippon Cargo Airlines",
+    "iata": "KZ",
+    "color": "#003087"
+  },
+  "NKS": {
+    "name": "Spirit Airlines",
+    "iata": "NK",
+    "color": "#FFD100"
+  },
+  "NLY": {
+    "name": "Niki",
+    "iata": "HG",
+    "color": "#CC0000"
+  },
+  "NOK": {
+    "name": "Nok Air",
+    "iata": "DD",
+    "color": "#FFD100"
+  },
+  "NZM": {
+    "name": "Mount Cook Airline",
+    "iata": "NM",
+    "color": "#003087"
+  },
+  "OAL": {
+    "name": "Olympic Air",
+    "iata": "OA",
+    "color": "#003087"
+  },
+  "OKA": {
+    "name": "Okay Airways",
+    "iata": "BK",
+    "color": "#FF6600"
+  },
+  "OMA": {
+    "name": "Oman Air",
+    "iata": "WY",
+    "color": "#CC0000"
+  },
+  "OTC": {
+    "name": "Air Macau Cargo",
+    "iata": "NX",
+    "color": "#006400"
+  },
+  "PAC": {
+    "name": "Polar Air Cargo",
+    "iata": "PO",
+    "color": "#1A365D"
+  },
+  "PAL": {
+    "name": "Philippine Airlines",
+    "iata": "PR",
+    "color": "#003087"
+  },
+  "PDT": {
+    "name": "Piedmont Airlines",
+    "iata": "PT",
+    "color": "#0078D2"
+  },
+  "PGT": {
+    "name": "Pegasus Airlines",
+    "iata": "PC",
+    "color": "#FFD100"
+  },
+  "PIA": {
+    "name": "Pakistan Intl",
+    "iata": "PK",
+    "color": "#006600"
+  },
+  "POE": {
+    "name": "Porter Airlines",
+    "iata": "PD",
+    "color": "#003087"
+  },
+  "QAF": {
+    "name": "Qatar Amiri Flight",
+    "iata": "QE",
+    "color": "#5C0632"
+  },
+  "QFA": {
+    "name": "Qantas",
+    "iata": "QF",
+    "color": "#CC0000"
+  },
+  "QJE": {
+    "name": "QantasLink",
+    "iata": "QF",
+    "color": "#CC0000"
+  },
+  "QTR": {
+    "name": "Qatar Airways",
+    "iata": "QR",
+    "color": "#5C0632"
+  },
+  "QXE": {
+    "name": "Horizon Air",
+    "iata": "QX",
+    "color": "#01426A"
+  },
+  "RAM": {
+    "name": "Royal Air Maroc",
+    "iata": "AT",
+    "color": "#CC0000"
+  },
+  "RBA": {
+    "name": "Royal Brunei",
+    "iata": "BI",
+    "color": "#CC0000"
+  },
+  "RLH": {
+    "name": "Ruili Airlines",
+    "iata": "DR",
+    "color": "#003087"
+  },
+  "ROT": {
+    "name": "TAROM",
+    "iata": "RO",
+    "color": "#003087"
+  },
+  "ROU": {
+    "name": "Air Canada Rouge",
+    "iata": "RV",
+    "color": "#CC0000"
+  },
+  "RPA": {
+    "name": "Republic Airways",
+    "iata": "YX",
+    "color": "#002244"
+  },
+  "RUK": {
+    "name": "Ryanair UK",
+    "iata": "RK",
+    "color": "#073590"
+  },
+  "RWD": {
+    "name": "RwandAir",
+    "iata": "WB",
+    "color": "#003087"
+  },
+  "RXA": {
+    "name": "Regional Express",
+    "iata": "ZL",
+    "color": "#003087"
+  },
+  "RYR": {
+    "name": "Ryanair",
+    "iata": "FR",
+    "color": "#073590"
+  },
+  "RYS": {
+    "name": "Buzz",
+    "iata": "RR",
+    "color": "#073590"
+  },
+  "SAA": {
+    "name": "South African Airways",
+    "iata": "SA",
+    "color": "#003087"
+  },
+  "SAS": {
+    "name": "Scandinavian Airlines",
+    "iata": "SK",
+    "color": "#003087"
+  },
+  "SBI": {
+    "name": "S7 Airlines",
+    "iata": "S7",
+    "color": "#A8CF45"
+  },
+  "SCX": {
+    "name": "Sun Country",
+    "iata": "SY",
+    "color": "#003087"
+  },
+  "SEJ": {
+    "name": "SpiceJet",
+    "iata": "SG",
+    "color": "#CC0000"
+  },
+  "SFJ": {
+    "name": "Star Flyer",
+    "iata": "7G",
+    "color": "#003087"
+  },
+  "SHQ": {
+    "name": "Shanghai Airlines",
+    "iata": "FM",
+    "color": "#CC0000"
+  },
+  "SHT": {
+    "name": "British Airways Shuttle",
+    "iata": "BA",
+    "color": "#075AAA"
+  },
+  "SIA": {
+    "name": "Singapore Airlines",
+    "iata": "SQ",
+    "color": "#003087"
+  },
+  "SJX": {
+    "name": "Starlux Airlines",
+    "iata": "JX",
+    "color": "#6C3483"
+  },
+  "SJY": {
+    "name": "Sriwijaya Air",
+    "iata": "SJ",
+    "color": "#003087"
+  },
+  "SKU": {
+    "name": "SKY Airline",
+    "iata": "H2",
+    "color": "#003087"
+  },
+  "SKW": {
+    "name": "SkyWest Airlines",
+    "iata": "OO",
+    "color": "#002244"
+  },
+  "SKY": {
+    "name": "Skymark Airlines",
+    "iata": "BC",
+    "color": "#003087"
+  },
+  "SLK": {
+    "name": "Thai AirAsia",
+    "iata": "FD",
+    "color": "#FF0000"
+  },
+  "SNJ": {
+    "name": "Solaseed Air",
+    "iata": "6J",
+    "color": "#006600"
+  },
+  "SOO": {
+    "name": "Southern Air",
+    "iata": "9S",
+    "color": "#1A365D"
+  },
+  "SVA": {
+    "name": "Saudia",
+    "iata": "SV",
+    "color": "#006600"
+  },
+  "SWA": {
+    "name": "Southwest Airlines",
+    "iata": "WN",
+    "color": "#304CB2"
+  },
+  "SWR": {
+    "name": "Swiss",
+    "iata": "LX",
+    "color": "#CC0000"
+  },
+  "SXS": {
+    "name": "SunExpress",
+    "iata": "XQ",
+    "color": "#CC0000"
+  },
+  "TAM": {
+    "name": "LATAM Brasil",
+    "iata": "JJ",
+    "color": "#A100FF"
+  },
+  "TAP": {
+    "name": "TAP Air Portugal",
+    "iata": "TP",
+    "color": "#CC0000"
+  },
+  "TAR": {
+    "name": "Tunisair",
+    "iata": "TU",
+    "color": "#CC0000"
+  },
+  "TBA": {
+    "name": "Tigerair Taiwan",
+    "iata": "IT",
+    "color": "#FF6600"
+  },
+  "TGW": {
+    "name": "Scoot",
+    "iata": "TR",
+    "color": "#FFD100"
+  },
+  "TGZ": {
+    "name": "Georgian Airways",
+    "iata": "A9",
+    "color": "#CC0000"
+  },
+  "THA": {
+    "name": "Thai Airways",
+    "iata": "TG",
+    "color": "#6A0DAD"
+  },
+  "THD": {
+    "name": "Thai Smile",
+    "iata": "WE",
+    "color": "#6A0DAD"
+  },
+  "THY": {
+    "name": "Turkish Airlines",
+    "iata": "TK",
+    "color": "#CC0000"
+  },
+  "TOM": {
+    "name": "TUI fly",
+    "iata": "X3",
+    "color": "#003087"
+  },
+  "TRA": {
+    "name": "Transavia",
+    "iata": "HV",
+    "color": "#006600"
+  },
+  "TTW": {
+    "name": "Tigerair Taiwan",
+    "iata": "IT",
+    "color": "#FF6600"
+  },
+  "TUI": {
+    "name": "TUI Airways",
+    "iata": "BY",
+    "color": "#003087"
+  },
+  "TWB": {
+    "name": "T'way Air",
+    "iata": "TW",
+    "color": "#FF6600"
+  },
+  "UAE": {
+    "name": "Emirates",
+    "iata": "EK",
+    "color": "#C60C30"
+  },
+  "UAL": {
+    "name": "United Airlines",
+    "iata": "UA",
+    "color": "#002244"
+  },
+  "UBA": {
+    "name": "Myanmar National Airlines",
+    "iata": "UB",
+    "color": "#003087"
+  },
+  "UCA": {
+    "name": "CommutAir",
+    "iata": "C5",
+    "color": "#002244"
+  },
+  "UEA": {
+    "name": "Chengdu Airlines",
+    "iata": "EU",
+    "color": "#003087"
+  },
+  "UIA": {
+    "name": "UNI Air",
+    "iata": "B7",
+    "color": "#006600"
+  },
+  "UPS": {
+    "name": "UPS Airlines",
+    "iata": "5X",
+    "color": "#5C3A1E"
+  },
+  "UTA": {
+    "name": "UTair",
+    "iata": "UT",
+    "color": "#003087"
+  },
+  "VIR": {
+    "name": "Virgin Atlantic",
+    "iata": "VS",
+    "color": "#CC0000"
+  },
+  "VJC": {
+    "name": "VietJet Air",
+    "iata": "VJ",
+    "color": "#CC0000"
+  },
+  "VLG": {
+    "name": "Vueling",
+    "iata": "VY",
+    "color": "#FFD100"
+  },
+  "VNL": {
+    "name": "Vanilla Air",
+    "iata": "JW",
+    "color": "#7C3AED"
+  },
+  "VOI": {
+    "name": "Volaris",
+    "iata": "Y4",
+    "color": "#7C3AED"
+  },
+  "VOZ": {
+    "name": "Virgin Australia",
+    "iata": "VA",
+    "color": "#CC0000"
+  },
+  "VTI": {
+    "name": "Vistara",
+    "iata": "UK",
+    "color": "#7C3AED"
+  },
+  "WAZ": {
+    "name": "Wizz Air Abu Dhabi",
+    "iata": "5W",
+    "color": "#C6007E"
+  },
+  "WJA": {
+    "name": "WestJet",
+    "iata": "WS",
+    "color": "#0033A0"
+  },
+  "WMT": {
+    "name": "Wizz Air Malta",
+    "iata": "W4",
+    "color": "#C6007E"
+  },
+  "WZZ": {
+    "name": "Wizz Air",
+    "iata": "W6",
+    "color": "#C6007E"
+  },
+  "XAX": {
+    "name": "AirAsia X",
+    "iata": "D7",
+    "color": "#FF0000"
+  },
+  "YZR": {
+    "name": "Suparna Airlines",
+    "iata": "Y8",
+    "color": "#334155"
+  }
+}

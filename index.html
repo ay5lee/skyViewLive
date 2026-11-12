@@ -92,6 +92,59 @@ header {
 .filter-toggle button.active.special { background:#0891B2; }
 .filter-toggle button:not(:last-child) { border-right:1px solid #CBD5E1; }
 
+.filter-open-btn {
+  display:none;
+  background:#F8FAFC; border:1px solid #CBD5E1; border-radius:6px;
+  padding:3px 10px; font-size:11px; cursor:pointer; color:#4A5568; font-family:inherit;
+}
+.filter-open-btn:hover, .filter-open-btn[aria-expanded="true"] {
+  background:#DBEAFE; border-color:#2563EB; color:#2563EB;
+}
+
+/* Mobile filter sheet */
+#filter-sheet {
+  display:none; position:fixed; inset:0; z-index:1200;
+}
+#filter-sheet.open { display:block; }
+.filter-sheet-backdrop {
+  position:absolute; inset:0; background:rgba(15,23,42,.35);
+}
+.filter-sheet-panel {
+  position:absolute; left:0; right:0; bottom:0;
+  background:#fff; border-radius:14px 14px 0 0;
+  border:1px solid #DDE6F0; border-bottom:none;
+  box-shadow:0 -8px 28px rgba(0,0,0,.14);
+  padding:10px 16px calc(16px + env(safe-area-inset-bottom, 0px));
+  animation:sheetUp .2s ease;
+}
+@keyframes sheetUp {
+  from { transform:translateY(18px); opacity:0; }
+  to { transform:translateY(0); opacity:1; }
+}
+.filter-sheet-handle {
+  width:36px; height:4px; border-radius:999px; background:#CBD5E1;
+  margin:2px auto 12px;
+}
+.filter-sheet-head {
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:12px;
+}
+.filter-sheet-head h2 {
+  font-size:14px; font-weight:700; color:#1A2332; letter-spacing:-.2px;
+}
+.filter-sheet-close {
+  background:none; border:none; color:#94A3B8; font-size:18px;
+  cursor:pointer; line-height:1; padding:2px 6px; border-radius:4px;
+}
+.filter-sheet-close:hover { color:#1A2332; }
+#filter-sheet .filter-group { gap:10px; }
+#filter-sheet .filter-toggle { width:100%; }
+#filter-sheet .filter-toggle button { flex:1; padding:8px 6px; font-size:12px; }
+.filter-sheet-actions {
+  display:flex; gap:8px; margin-top:14px;
+}
+.filter-sheet-actions .refresh-btn { flex:1; padding:8px 10px; font-size:12px; }
+
 /* ── Map ── */
 #map { flex:1; z-index:1; }
 
@@ -209,6 +262,45 @@ header {
   box-shadow:0 3px 12px rgba(0,0,0,.1); display:none;
 }
 #proxy-warn code { background:rgba(0,0,0,.08); padding:1px 5px; border-radius:3px; font-family:monospace; font-size:11px; }
+
+/* ── Narrow viewports: compact header, filter sheet, full-bleed panel ── */
+@media (max-width: 860px) {
+  header {
+    height:auto; min-height:52px;
+    padding:8px 10px; gap:8px; flex-wrap:nowrap;
+  }
+  .logo { font-size:13px; gap:6px; flex-shrink:0; }
+  .logo svg { width:22px; height:22px; }
+  .hdr-search { flex:1; min-width:0; max-width:none; }
+  .hdr-search input { width:100%; min-width:0; }
+  .hdr-right { gap:8px; flex-shrink:0; }
+  .hdr-right .hdr-filters,
+  .hdr-right > .refresh-btn { display:none; }
+  .hdr-right .badge { display:none; }
+  .filter-open-btn { display:inline-flex; align-items:center; }
+  #status-text { max-width:72px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+  #panel {
+    top:auto; right:0; left:0; bottom:0; width:100%;
+    max-height:min(72dvh, 560px);
+    border-radius:14px 14px 0 0;
+    border-left:none; border-right:none; border-bottom:none;
+    animation:sheetUp .2s ease;
+  }
+
+  #legend {
+    bottom:12px; left:10px;
+    padding:7px 10px; font-size:10px;
+    max-width:42vw;
+  }
+
+  .search-status { max-width:min(260px, 70vw); }
+}
+
+@media (max-width: 480px) {
+  .logo span.brand-rest { display:none; }
+  #status-text { display:none; }
+}
 </style>
 </head>
 <body>
@@ -219,7 +311,7 @@ header {
       <circle cx="13" cy="13" r="13" fill="#EFF6FF"/>
       <path d="M13 5l1.8 5.4H20l-4.5 3.3 1.7 5.3L13 16l-4.2 3 1.7-5.3L6 10.4h5.2L13 5z" fill="#2563EB"/>
     </svg>
-    Sky<span>View</span> Live
+    Sky<span>View</span><span class="brand-rest"> Live</span>
   </div>
   <div class="hdr-search">
     <input id="search-input" type="text" placeholder="Flight, hex, reg, or city…" autocomplete="off"
@@ -234,23 +326,52 @@ header {
       <span id="status-text">Connecting…</span>
     </div>
     <div class="badge" id="count">— flights</div>
-    <div class="filter-group">
+    <div class="filter-group hdr-filters">
       <div class="filter-toggle">
-        <button id="f-all"      class="active" onclick="setFilter('all')">All</button>
-        <button id="f-airborne"            onclick="setFilter('airborne')">✈ Airborne</button>
-        <button id="f-ground"              onclick="setFilter('ground')">⬤ Ground</button>
+        <button type="button" data-ac-filter="all" class="active" onclick="setFilter('all')">All</button>
+        <button type="button" data-ac-filter="airborne" onclick="setFilter('airborne')">✈ Airborne</button>
+        <button type="button" data-ac-filter="ground" onclick="setFilter('ground')">⬤ Ground</button>
       </div>
       <div class="filter-toggle">
-        <button id="t-all"      class="active" onclick="setTypeFilter('all')">All Types</button>
-        <button id="t-commercial"          onclick="setTypeFilter('commercial')">Commercial</button>
-        <button id="t-cargo"    class="cargo"  onclick="setTypeFilter('cargo')">Cargo</button>
-        <button id="t-private"  class="private" onclick="setTypeFilter('private')">Private</button>
-        <button id="t-special"  class="special" onclick="setTypeFilter('special')">Special</button>
+        <button type="button" data-type-filter="all" class="active" onclick="setTypeFilter('all')">All Types</button>
+        <button type="button" data-type-filter="commercial" onclick="setTypeFilter('commercial')">Commercial</button>
+        <button type="button" data-type-filter="cargo" class="cargo" onclick="setTypeFilter('cargo')">Cargo</button>
+        <button type="button" data-type-filter="private" class="private" onclick="setTypeFilter('private')">Private</button>
+        <button type="button" data-type-filter="special" class="special" onclick="setTypeFilter('special')">Special</button>
       </div>
     </div>
-    <button class="refresh-btn" onclick="fetchFlights()">↻ Refresh</button>
+    <button type="button" class="filter-open-btn" id="filter-open" aria-expanded="false" aria-controls="filter-sheet" onclick="openFilterSheet()">Filters</button>
+    <button type="button" class="refresh-btn" onclick="fetchFlights()">↻ Refresh</button>
   </div>
 </header>
+
+<div id="filter-sheet" aria-hidden="true" role="dialog" aria-label="Flight filters">
+  <div class="filter-sheet-backdrop" onclick="closeFilterSheet()"></div>
+  <div class="filter-sheet-panel">
+    <div class="filter-sheet-handle" aria-hidden="true"></div>
+    <div class="filter-sheet-head">
+      <h2>Filters</h2>
+      <button type="button" class="filter-sheet-close" onclick="closeFilterSheet()" aria-label="Close filters">✕</button>
+    </div>
+    <div class="filter-group">
+      <div class="filter-toggle">
+        <button type="button" data-ac-filter="all" class="active" onclick="setFilter('all')">All</button>
+        <button type="button" data-ac-filter="airborne" onclick="setFilter('airborne')">✈ Airborne</button>
+        <button type="button" data-ac-filter="ground" onclick="setFilter('ground')">⬤ Ground</button>
+      </div>
+      <div class="filter-toggle">
+        <button type="button" data-type-filter="all" class="active" onclick="setTypeFilter('all')">All Types</button>
+        <button type="button" data-type-filter="commercial" onclick="setTypeFilter('commercial')">Commercial</button>
+        <button type="button" data-type-filter="cargo" class="cargo" onclick="setTypeFilter('cargo')">Cargo</button>
+        <button type="button" data-type-filter="private" class="private" onclick="setTypeFilter('private')">Private</button>
+        <button type="button" data-type-filter="special" class="special" onclick="setTypeFilter('special')">Special</button>
+      </div>
+    </div>
+    <div class="filter-sheet-actions">
+      <button type="button" class="refresh-btn" onclick="fetchFlights(); closeFilterSheet()">↻ Refresh</button>
+    </div>
+  </div>
+</div>
 
 <div id="map"></div>
 
@@ -295,113 +416,16 @@ header {
 <script>
 const PROXY = '/api';
 
-// ── Airline registry ──────────────────────────────────────────────────────────
-const AIRLINES = {
-  CPA:{name:'Cathay Pacific',       iata:'CX', color:'#006564'},
-  HKE:{name:'HK Express',           iata:'UO', color:'#E4002B'},
-  HKC:{name:'HK Air Cargo',         iata:'RH', color:'#334155'},
-  HGB:{name:'Greater Bay Airlines', iata:'HB', color:'#C60C30'},
-  CRK:{name:'Hong Kong Airlines',   iata:'HX', color:'#CC0000'},
-  CCA:{name:'Air China',            iata:'CA', color:'#CC0000'},
-  CSN:{name:'China Southern',       iata:'CZ', color:'#003087'},
-  CES:{name:'China Eastern',        iata:'MU', color:'#CC0000'},
-  CSZ:{name:'Shenzhen Airlines',    iata:'ZH', color:'#003087'},
-  CXA:{name:'Xiamen Air',           iata:'MF', color:'#003087'},
-  CHH:{name:'Hainan Airlines',      iata:'HU', color:'#CC0000'},
-  CSC:{name:'Sichuan Airlines',     iata:'3U', color:'#CC0000'},
-  CQH:{name:'Spring Airlines',      iata:'9C', color:'#FF6600'},
-  CSS:{name:'Donghai Airlines',     iata:'8L', color:'#003087'},
-  CDG:{name:'Shandong Airlines',    iata:'SC', color:'#003087'},
-  CBJ:{name:'Beijing Capital Air',  iata:'JD', color:'#003087'},
-  GCR:{name:'Tianjin Airlines',     iata:'G8', color:'#CC0000'},
-  SHQ:{name:'Shanghai Airlines',    iata:'FM', color:'#CC0000'},
-  UEA:{name:'Chengdu Airlines',     iata:'EU', color:'#003087'},
-  GXA:{name:'Guangxi Airways',      iata:'GX', color:'#CC0000'},
-  LKE:{name:'Lucky Air',            iata:'LK', color:'#003087'},
-  OKA:{name:'Okay Airways',         iata:'BK', color:'#FF6600'},
-  DKH:{name:'Kunming Airlines',     iata:'KN', color:'#003087'},
-  FZA:{name:'Fuzhou Airlines',      iata:'FU', color:'#CC0000'},
-  BAV:{name:'Beijing Capital Air',  iata:'JD', color:'#003087'},
-  CYH:{name:'Colorful Guizhou',     iata:'GY', color:'#003087'},
-  AMU:{name:'Air Macau',            iata:'NX', color:'#006400'},
-  RLH:{name:'Ruili Airlines',       iata:'DR', color:'#003087'},
-  KAL:{name:'Korean Air',           iata:'KE', color:'#00256C'},
-  AAR:{name:'Asiana Airlines',      iata:'OZ', color:'#CC0000'},
-  JJA:{name:'Jin Air',              iata:'LJ', color:'#003087'},
-  TWB:{name:"T'way Air",            iata:'TW', color:'#FF6600'},
-  ABL:{name:'Air Busan',            iata:'BX', color:'#003087'},
-  ANA:{name:'All Nippon Airways',   iata:'NH', color:'#003087'},
-  JAL:{name:'Japan Airlines',       iata:'JL', color:'#CC0000'},
-  JST:{name:'Jetstar Japan',        iata:'GK', color:'#FF6600'},
-  APJ:{name:'Peach Aviation',       iata:'MM', color:'#CC0066'},
-  SJX:{name:'Starlux Airlines',     iata:'JX', color:'#6C3483'},
-  CAL:{name:'China Airlines',       iata:'CI', color:'#CC0000'},
-  EVA:{name:'EVA Air',              iata:'BR', color:'#007C5E'},
-  TBA:{name:'Tigerair Taiwan',      iata:'IT', color:'#FF6600'},
-  SIA:{name:'Singapore Airlines',   iata:'SQ', color:'#003087'},
-  MAS:{name:'Malaysia Airlines',    iata:'MH', color:'#CC0000'},
-  THA:{name:'Thai Airways',         iata:'TG', color:'#6A0DAD'},
-  AXM:{name:'AirAsia X',            iata:'D7', color:'#FF0000'},
-  VJC:{name:'VietJet Air',          iata:'VJ', color:'#CC0000'},
-  HVN:{name:'Vietnam Airlines',     iata:'VN', color:'#003087'},
-  GIA:{name:'Garuda Indonesia',     iata:'GA', color:'#003087'},
-  PAL:{name:'Philippine Airlines',  iata:'PR', color:'#003087'},
-  CEB:{name:'Cebu Pacific',         iata:'5J', color:'#D4A017'},
-  BKP:{name:'Bangkok Airways',      iata:'PG', color:'#6A0DAD'},
-  SLK:{name:'Thai AirAsia',         iata:'FD', color:'#FF0000'},
-  RBA:{name:'Royal Brunei',         iata:'BI', color:'#CC0000'},
-  AIC:{name:'Air India',            iata:'AI', color:'#CC0000'},
-  PIA:{name:'Pakistan Intl',        iata:'PK', color:'#006600'},
-  UAE:{name:'Emirates',             iata:'EK', color:'#C60C30'},
-  QTR:{name:'Qatar Airways',        iata:'QR', color:'#5C0632'},
-  ETD:{name:'Etihad Airways',       iata:'EY', color:'#B8962E'},
-  SVA:{name:'Saudia',               iata:'SV', color:'#006600'},
-  OMA:{name:'Oman Air',             iata:'WY', color:'#CC0000'},
-  DLH:{name:'Lufthansa',            iata:'LH', color:'#05164D'},
-  BAW:{name:'British Airways',      iata:'BA', color:'#075AAA'},
-  AFR:{name:'Air France',           iata:'AF', color:'#002395'},
-  KLM:{name:'KLM',                  iata:'KL', color:'#00A1E0'},
-  SWR:{name:'Swiss',                iata:'LX', color:'#CC0000'},
-  THY:{name:'Turkish Airlines',     iata:'TK', color:'#CC0000'},
-  FIN:{name:'Finnair',              iata:'AY', color:'#003087'},
-  AUA:{name:'Austrian Airlines',    iata:'OS', color:'#CC0000'},
-  VIR:{name:'Virgin Atlantic',      iata:'VS', color:'#CC0000'},
-  AAL:{name:'American Airlines',    iata:'AA', color:'#0078D2'},
-  UAL:{name:'United Airlines',      iata:'UA', color:'#002244'},
-  DAL:{name:'Delta Air Lines',      iata:'DL', color:'#CC0000'},
-  SWA:{name:'Southwest Airlines',   iata:'WN', color:'#304CB2'},
-  ASA:{name:'Alaska Airlines',      iata:'AS', color:'#01426A'},
-  JBU:{name:'JetBlue',              iata:'B6', color:'#003876'},
-  ACA:{name:'Air Canada',           iata:'AC', color:'#CC0000'},
-  WJA:{name:'WestJet',              iata:'WS', color:'#0033A0'},
-  SAS:{name:'Scandinavian Airlines',iata:'SK', color:'#003087'},
-  RYR:{name:'Ryanair',              iata:'FR', color:'#073590'},
-  EZY:{name:'easyJet',              iata:'U2', color:'#FF6600'},
-  WZZ:{name:'Wizz Air',             iata:'W6', color:'#C6007E'},
-  IBE:{name:'Iberia',               iata:'IB', color:'#CC0000'},
-  TAP:{name:'TAP Air Portugal',     iata:'TP', color:'#CC0000'},
-  LOT:{name:'LOT Polish Airlines',  iata:'LO', color:'#003087'},
-  BEL:{name:'Brussels Airlines',    iata:'SN', color:'#CC0000'},
-  TUI:{name:'TUI Airways',          iata:'BY', color:'#003087'},
-  NLY:{name:'Niki',                 iata:'HG', color:'#CC0000'},
-  QFA:{name:'Qantas',               iata:'QF', color:'#CC0000'},
-  ANZ:{name:'Air New Zealand',      iata:'NZ', color:'#003087'},
-  SIA:{name:'Singapore Airlines',   iata:'SQ', color:'#003087'},
-  ETH:{name:'Ethiopian Airlines',   iata:'ET', color:'#006600'},
-  KQA:{name:'Kenya Airways',        iata:'KQ', color:'#CC0000'},
-  RAM:{name:'Royal Air Maroc',      iata:'AT', color:'#CC0000'},
-  MSR:{name:'EgyptAir',             iata:'MS', color:'#003087'},
-  GFA:{name:'Gulf Air',             iata:'GF', color:'#CC0000'},
-  FLY:{name:'flybe',                iata:'BE', color:'#7C3AED'},
-  GTI:{name:'Atlas Air',            iata:'5Y', color:'#1A365D'},
-  MNB:{name:'MNG Airlines',         iata:'MB', color:'#334155'},
-  AZG:{name:'Silk Way Airlines',    iata:'ZP', color:'#1A365D'},
-  FDX:{name:'FedEx',                iata:'FX', color:'#FF6600'},
-  UPS:{name:'UPS Airlines',         iata:'5X', color:'#5C3A1E'},
-  CLX:{name:'Cargolux',             iata:'CV', color:'#003087'},
-  ESR:{name:'Eastar Jet',           iata:'ZE', color:'#FF6600'},
-  MGL:{name:'MIAT Mongolian',       iata:'OM', color:'#003087'},
-};
+// ── Airline registry (loaded from /data/airlines.json) ────────────────────────
+let AIRLINES = {};
+
+async function loadAirlines() {
+  const r = await fetch('/data/airlines.json', { cache: 'no-cache' });
+  if (!r.ok) throw new Error('Failed to load airlines.json (' + r.status + ')');
+  const data = await r.json();
+  if (!data || typeof data !== 'object') throw new Error('Invalid airlines.json');
+  AIRLINES = data;
+}
 
 function getAirline(cs) {
   if (!cs) return null;
@@ -577,8 +601,68 @@ function makeIcon(hdg, color, label, logoIata, route, category) {
   });
 }
 
+// ── Prefs (localStorage) ──────────────────────────────────────────────────────
+const PREFS_KEY = 'skyview.prefs.v1';
+const DEFAULT_MAP_CENTER = [22.32, 114.17];
+const DEFAULT_MAP_ZOOM = 10;
+const AC_FILTERS = ['all', 'airborne', 'ground'];
+const TYPE_FILTERS = ['all', 'commercial', 'cargo', 'private', 'special'];
+
+function loadPrefs() {
+  try {
+    const raw = localStorage.getItem(PREFS_KEY);
+    if (!raw) return {};
+    const data = JSON.parse(raw);
+    return data && typeof data === 'object' ? data : {};
+  } catch (e) {
+    return {};
+  }
+}
+
+function savePrefs(patch) {
+  try {
+    const next = Object.assign({}, loadPrefs(), patch);
+    localStorage.setItem(PREFS_KEY, JSON.stringify(next));
+  } catch (e) {
+    /* quota / private mode — ignore */
+  }
+}
+
+function readSavedMapView() {
+  const prefs = loadPrefs();
+  const view = prefs.mapView;
+  if (!view || typeof view !== 'object') return null;
+  const lat = Number(view.lat);
+  const lon = Number(view.lon);
+  const zoom = Number(view.zoom);
+  if (!Number.isFinite(lat) || !Number.isFinite(lon) || !Number.isFinite(zoom)) return null;
+  if (lat < -90 || lat > 90 || lon < -180 || lon > 180) return null;
+  if (zoom < 1 || zoom > 19) return null;
+  return { center: [lat, lon], zoom: zoom };
+}
+
+function persistMapView() {
+  const c = map.getCenter();
+  savePrefs({
+    mapView: { lat: c.lat, lon: c.lng, zoom: map.getZoom() },
+  });
+}
+
+function persistFilters() {
+  savePrefs({ acFilter: acFilter, typeFilter: typeFilter });
+}
+
+const _savedPrefs = loadPrefs();
+const _savedView = readSavedMapView();
+let acFilter = AC_FILTERS.indexOf(_savedPrefs.acFilter) >= 0 ? _savedPrefs.acFilter : 'all';
+let typeFilter = TYPE_FILTERS.indexOf(_savedPrefs.typeFilter) >= 0 ? _savedPrefs.typeFilter : 'all';
+
 // ── Map ───────────────────────────────────────────────────────────────────────
-const map = L.map('map', {center:[22.32,114.17], zoom:10, zoomControl:true});
+const map = L.map('map', {
+  center: _savedView ? _savedView.center : DEFAULT_MAP_CENTER,
+  zoom: _savedView ? _savedView.zoom : DEFAULT_MAP_ZOOM,
+  zoomControl: true,
+});
 if (window.GOOGLE_MAPS_KEY) {
   L.gridLayer.googleMutant({type: 'roadmap'}).addTo(map);
 } else {
@@ -593,25 +677,47 @@ const acData   = {};
 const acAnchor = {};
 let   proxyOk   = false;
 let   animFrame  = null;
-let acFilter   = 'all';  // 'all' | 'airborne' | 'ground'
-let typeFilter = 'all';  // 'all' | 'commercial' | 'cargo' | 'private' | 'special'
 let panelSelectedHex = null;  // ICAO hex of aircraft shown in detail panel
 
-function setFilter(f) {
+function setFilter(f, opts) {
+  if (AC_FILTERS.indexOf(f) < 0) f = 'all';
   acFilter = f;
-  ['all','airborne','ground'].forEach(function(id) {
-    document.getElementById('f-' + id).classList.toggle('active', id === f);
+  document.querySelectorAll('[data-ac-filter]').forEach(function(btn) {
+    btn.classList.toggle('active', btn.getAttribute('data-ac-filter') === f);
   });
+  if (!opts || opts.persist !== false) persistFilters();
   applyFilter();
 }
 
-function setTypeFilter(f) {
+function setTypeFilter(f, opts) {
+  if (TYPE_FILTERS.indexOf(f) < 0) f = 'all';
   typeFilter = f;
-  ['all','commercial','cargo','private','special'].forEach(function(id) {
-    document.getElementById('t-' + id).classList.toggle('active', id === f);
+  document.querySelectorAll('[data-type-filter]').forEach(function(btn) {
+    btn.classList.toggle('active', btn.getAttribute('data-type-filter') === f);
   });
+  if (!opts || opts.persist !== false) persistFilters();
   applyFilter();
 }
+
+function openFilterSheet() {
+  const sheet = document.getElementById('filter-sheet');
+  const btn = document.getElementById('filter-open');
+  sheet.classList.add('open');
+  sheet.setAttribute('aria-hidden', 'false');
+  if (btn) btn.setAttribute('aria-expanded', 'true');
+}
+
+function closeFilterSheet() {
+  const sheet = document.getElementById('filter-sheet');
+  const btn = document.getElementById('filter-open');
+  sheet.classList.remove('open');
+  sheet.setAttribute('aria-hidden', 'true');
+  if (btn) btn.setAttribute('aria-expanded', 'false');
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeFilterSheet();
+});
 
 function applyFilter() {
   Object.keys(markers).forEach(function(hex) {
@@ -1270,14 +1376,28 @@ async function runSearch() {
 }
 
 // ── Start ─────────────────────────────────────────────────────────────────────
-fetchFlights();
-setInterval(fetchFlights, 30000);
-let moveTimer = null;
-map.on('moveend', function() {
-  clearTimeout(moveTimer);
-  moveTimer = setTimeout(fetchFlights, 800);
-});
-animatePlanes();
+// Restore filter button active states from prefs (defaults already match HTML).
+setFilter(acFilter, { persist: false });
+setTypeFilter(typeFilter, { persist: false });
+
+async function boot() {
+  try {
+    await loadAirlines();
+  } catch (e) {
+    console.error(e);
+    document.getElementById('status-text').textContent = 'Airline data failed to load';
+  }
+  fetchFlights();
+  setInterval(fetchFlights, 30000);
+  let moveTimer = null;
+  map.on('moveend', function() {
+    persistMapView();
+    clearTimeout(moveTimer);
+    moveTimer = setTimeout(fetchFlights, 800);
+  });
+  animatePlanes();
+}
+boot();
 </script>
 </body>
 </html>

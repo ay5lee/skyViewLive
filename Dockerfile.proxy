@@ -1,5 +1,6 @@
 FROM python:3.12-slim
 WORKDIR /app
 COPY proxy.py .
+COPY data/ data/
 RUN mkdir -p /app/cache && echo '{}' > /app/cache/route_cache.json
 CMD ["python3", "-u", "proxy.py"]

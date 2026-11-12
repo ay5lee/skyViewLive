@@ -31,89 +31,26 @@ CACHE_TTL_SEC = {
 }
 DEFAULT_CACHE_TTL_SEC = 6 * 3600
 
-# ICAO -> (IATA, city, lat, lon)
-AIRPORTS = {
-    'VHHH':('HKG','Hong Kong',    22.3089, 113.9150),
-    'VMMC':('MFM','Macau',        22.1496, 113.5916),
-    'ZGGG':('CAN','Guangzhou',    23.3924, 113.2990),
-    'ZGSZ':('SZX','Shenzhen',     22.6393, 113.8108),
-    'ZSPD':('PVG','Shanghai',     31.1434, 121.8052),
-    'ZSSS':('SHA','Shanghai',     31.1981, 121.3362),
-    'ZBAA':('PEK','Beijing',      40.0799, 116.6031),
-    'ZBAD':('PKX','Beijing',      39.5096, 116.4105),
-    'ZUCK':('CKG','Chongqing',    29.7192, 106.6417),
-    'ZUUU':('CTU','Chengdu',      30.5785, 103.9469),
-    'ZPPP':('KMG','Kunming',      25.1019, 102.9292),
-    'ZGHA':('CSX','Changsha',     28.1892, 113.2196),
-    'ZSXM':('XMN','Xiamen',       24.5440, 118.1277),
-    'ZSFZ':('FOC','Fuzhou',       25.9351, 119.6630),
-    'ZGSD':('ZUH','Zhuhai',       22.0064, 113.3760),
-    'ZLXY':('XIY',"Xi'an",        34.4471, 108.7516),
-    'ZHHH':('WUH','Wuhan',        30.7838, 114.2081),
-    'ZSQD':('TAO','Qingdao',      36.2661, 120.3745),
-    'ZBTJ':('TSN','Tianjin',      39.1244, 117.3464),
-    'ZGNN':('NNG','Nanning',      22.6083, 108.1722),
-    'RCTP':('TPE','Taipei',       25.0777, 121.2326),
-    'RCSS':('TSA','Taipei',       25.0693, 121.5522),
-    'RCKH':('KHH','Kaohsiung',    22.5771, 120.3497),
-    'RKSI':('ICN','Seoul',        37.4602, 126.4407),
-    'RKSS':('GMP','Seoul',        37.5583, 126.7906),
-    'RJAA':('NRT','Tokyo',        35.7720, 140.3929),
-    'RJTT':('HND','Tokyo',        35.5533, 139.7811),
-    'RJBB':('KIX','Osaka',        34.4272, 135.2440),
-    'RJFF':('FUK','Fukuoka',      33.5858, 130.4508),
-    'VTBS':('BKK','Bangkok',      13.6811, 100.7472),
-    'VTBD':('DMK','Bangkok',      13.9126, 100.6066),
-    'WSSS':('SIN','Singapore',     1.3644, 103.9915),
-    'WMKK':('KUL','Kuala Lumpur',  2.7456, 101.7099),
-    'VVTS':('SGN','Ho Chi Minh',  10.8188, 106.6520),
-    'VVNB':('HAN','Hanoi',        21.2212, 105.8072),
-    'RPLL':('MNL','Manila',       14.5086, 121.0197),
-    'WIII':('CGK','Jakarta',      -6.1256, 106.6559),
-    'VIDP':('DEL','Delhi',        28.5665,  77.1031),
-    'VABB':('BOM','Mumbai',       19.0887,  72.8679),
-    'OMDB':('DXB','Dubai',        25.2532,  55.3657),
-    'OOMS':('MCT','Muscat',       23.5933,  58.2844),
-    'OTBD':('DOH','Doha',         25.2731,  51.6081),
-    'OERK':('RUH','Riyadh',       24.9576,  46.6988),
-    'OEDF':('DMM','Dammam',       26.4712,  49.7979),
-    'EDDF':('FRA','Frankfurt',    50.0333,   8.5706),
-    'EGLL':('LHR','London',       51.4775,  -0.4614),
-    'LFPG':('CDG','Paris',        49.0097,   2.5478),
-    'EHAM':('AMS','Amsterdam',    52.3086,   4.7639),
-    'LSZH':('ZRH','Zurich',       47.4647,   8.5492),
-    'LIRF':('FCO','Rome',         41.8003,  12.2389),
-    'LEMD':('MAD','Madrid',       40.4719,  -3.5626),
-    'LTFM':('IST','Istanbul',     41.2753,  28.7519),
-    'UUEE':('SVO','Moscow',       55.9726,  37.4146),
-    'EDDM':('MUC','Munich',       48.3538,  11.7861),
-    'LOWW':('VIE','Vienna',       48.1103,  16.5697),
-    'EKCH':('CPH','Copenhagen',   55.6180,  12.6560),
-    'EFHK':('HEL','Helsinki',     60.3172,  24.9633),
-    'ENGM':('OSL','Oslo',         60.1939,  11.1004),
-    'ESSA':('ARN','Stockholm',    59.6519,  17.9186),
-    'KATL':('ATL','Atlanta',      33.6367, -84.4281),
-    'KLAX':('LAX','Los Angeles',  33.9425,-118.4081),
-    'KJFK':('JFK','New York',     40.6413, -73.7781),
-    'KORD':('ORD','Chicago',      41.9742, -87.9073),
-    'KSFO':('SFO','San Francisco',37.6213,-122.3790),
-    'KDFW':('DFW','Dallas',       32.8998, -97.0403),
-    'KDEN':('DEN','Denver',       39.8561,-104.6737),
-    'KSEA':('SEA','Seattle',      47.4502,-122.3088),
-    'KBOS':('BOS','Boston',       42.3656, -71.0096),
-    'KIAH':('IAH','Houston',      29.9902, -95.3368),
-    'CYVR':('YVR','Vancouver',    49.1939,-123.1844),
-    'CYYZ':('YYZ','Toronto',      43.6777, -79.6248),
-    'YSSY':('SYD','Sydney',      -33.9399, 151.1753),
-    'YMML':('MEL','Melbourne',   -37.6690, 144.8410),
-    'YBBN':('BNE','Brisbane',    -27.3842, 153.1175),
-    'NZAA':('AKL','Auckland',    -37.0082, 174.7917),
-    'FAOR':('JNB','Johannesburg',-26.1392,  28.2460),
-    'HAAB':('ADD','Addis Ababa',   8.9779,  38.7993),
-    'SBGR':('GRU','Sao Paulo',   -23.4356, -46.4731),
-    'SAEZ':('EZE','Buenos Aires',-34.8222, -58.5358),
-    'MMMX':('MEX','Mexico City',  19.4363, -99.0721),
-}
+# ICAO -> (IATA, city, lat, lon) loaded from data/airports.json
+def _load_airports():
+    path = os.path.join(os.path.dirname(__file__), 'data', 'airports.json')
+    with open(path, 'r', encoding='utf-8') as f:
+        raw = json.load(f)
+    out = {}
+    for icao, info in raw.items():
+        if not isinstance(info, dict):
+            continue
+        iata = info.get('iata') or ''
+        city = info.get('city') or ''
+        lat = info.get('lat')
+        lon = info.get('lon')
+        if lat is None or lon is None:
+            continue
+        out[icao.upper()] = (str(iata).upper(), str(city), float(lat), float(lon))
+    return out
+
+AIRPORTS = _load_airports()
+
 
 CACHE_DIR = os.environ.get(
     'ROUTE_CACHE_DIR',
@@ -591,6 +528,7 @@ class ProxyHandler(BaseHTTPRequestHandler):
 
 if __name__ == '__main__':
     _load_cache()
+    print(f"  📍 Loaded {len(AIRPORTS)} airports from data/airports.json")
     server = ThreadingHTTPServer(('', PORT), ProxyHandler)
     # Avoid slow-client stalls blocking the accept loop unduly.
     server.daemon_threads = True
