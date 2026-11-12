@@ -36,17 +36,29 @@ header {
 }
 .logo { display:flex; align-items:center; gap:9px; font-weight:700; font-size:15px; letter-spacing:-.3px; }
 .logo span { color:#2563EB; }
-.hdr-search { display:flex; align-items:center; }
+.hdr-search { display:flex; align-items:center; position:relative; }
 .hdr-search input {
   border:1px solid #CBD5E1; border-radius:6px 0 0 6px;
   padding:3px 9px; font-size:12px; font-family:inherit;
-  outline:none; width:150px; color:#1A2332; background:#F8FAFC;
+  outline:none; width:180px; color:#1A2332; background:#F8FAFC;
 }
 .hdr-search button {
   border:1px solid #CBD5E1; border-left:none; border-radius:0 6px 6px 0;
   padding:3px 9px; font-size:12px; cursor:pointer;
   background:#F8FAFC; color:#4A5568; font-family:inherit;
 }
+.hdr-search button:hover { background:#DBEAFE; border-color:#2563EB; color:#2563EB; }
+.search-status {
+  position:absolute; top:calc(100% + 6px); left:0;
+  font-size:11px; line-height:1.3; color:#64748B;
+  background:rgba(255,255,255,0.96); border:1px solid #DDE6F0;
+  border-radius:6px; padding:4px 8px; max-width:260px;
+  box-shadow:0 2px 8px rgba(0,0,0,.08); z-index:1100;
+  display:none; pointer-events:none;
+}
+.search-status.show { display:block; }
+.search-status.err { color:#B91C1C; border-color:#FECACA; background:#FEF2F2; }
+.search-status.ok  { color:#166534; border-color:#BBF7D0; background:#F0FDF4; }
 .hdr-right { display:flex; align-items:center; gap:14px; font-size:12px; color:#4A5568; }
 .badge {
   font-family:monospace; font-weight:600; font-size:12.5px;
@@ -210,9 +222,11 @@ header {
     Sky<span>View</span> Live
   </div>
   <div class="hdr-search">
-    <input id="city-input" type="text" placeholder="Jump to city…" autocomplete="off"
-      onkeydown="if(event.key==='Enter')jumpToCity()"/>
-    <button onclick="jumpToCity()">Go</button>
+    <input id="search-input" type="text" placeholder="Flight, hex, reg, or city…" autocomplete="off"
+      onkeydown="if(event.key==='Enter')runSearch()"
+      oninput="clearSearchStatus()"/>
+    <button type="button" onclick="runSearch()">Go</button>
+    <div id="search-status" class="search-status" role="status" aria-live="polite"></div>
   </div>
   <div class="hdr-right">
     <div style="display:flex;align-items:center;gap:6px">
@@ -1130,18 +1144,129 @@ function closePanel() {
 
 map.on('click', closePanel);
 
-// ── City search ───────────────────────────────────────────────────────────────
-async function jumpToCity() {
-  const input = document.getElementById('city-input');
-  const q = input.value.trim();
+// ── Search (flight first, then city) ──────────────────────────────────────────
+let searchStatusTimer = null;
+
+function clearSearchStatus() {
+  const el = document.getElementById('search-status');
+  if (!el) return;
+  el.className = 'search-status';
+  el.textContent = '';
+  if (searchStatusTimer) { clearTimeout(searchStatusTimer); searchStatusTimer = null; }
+}
+
+function setSearchStatus(msg, kind) {
+  const el = document.getElementById('search-status');
+  if (!el) return;
+  if (searchStatusTimer) { clearTimeout(searchStatusTimer); searchStatusTimer = null; }
+  if (!msg) { clearSearchStatus(); return; }
+  el.textContent = msg;
+  el.className = 'search-status show' + (kind === 'err' ? ' err' : kind === 'ok' ? ' ok' : '');
+  // Auto-hide success; keep errors until the next search/input
+  if (kind === 'ok') {
+    searchStatusTimer = setTimeout(clearSearchStatus, 3200);
+  }
+}
+
+function normalizeSearchToken(s) {
+  // Uppercase and strip separators so "B-HNR", "bh nr", and hex casing all match
+  return String(s || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+}
+
+/** Match currently loaded aircraft by ICAO hex, callsign, marketing flight, or registration. */
+function findAircraftInView(query) {
+  const q = normalizeSearchToken(query);
+  if (!q) return null;
+
+  const hexes = Object.keys(acData);
+  let exact = null;
+  const prefixHits = [];
+
+  for (let i = 0; i < hexes.length; i++) {
+    const hex = hexes[i];
+    const ac  = acData[hex];
+    if (!ac) continue;
+
+    const hexN = normalizeSearchToken(ac.hex || hex);
+    const csN  = normalizeSearchToken(ac.flight);
+    const regN = normalizeSearchToken(ac.r);
+    const airline = resolveAirline(ac.flight, hex);
+    const mktN = normalizeSearchToken(toMarketingFlight(ac.flight, airline));
+
+    if (q === hexN || q === csN || q === regN || (mktN && q === mktN)) {
+      exact = ac;
+      break;
+    }
+
+    // Unique prefix fallback for callsign / marketing / reg (min 3 chars)
+    if (q.length >= 3) {
+      if ((csN && csN.startsWith(q)) || (mktN && mktN.startsWith(q)) || (regN && regN.startsWith(q)) || (hexN && hexN.startsWith(q))) {
+        prefixHits.push(ac);
+      }
+    }
+  }
+
+  if (exact) return { ac: exact, how: 'exact' };
+  if (prefixHits.length === 1) return { ac: prefixHits[0], how: 'prefix' };
+  if (prefixHits.length > 1) return { ac: null, how: 'ambiguous', count: prefixHits.length };
+  return null;
+}
+
+function focusAircraft(ac) {
+  if (!ac || ac.lat == null || ac.lon == null) return false;
+  const zoom = Math.max(map.getZoom(), 11);
+  map.setView([ac.lat, ac.lon], zoom);
+  showPanel(ac);
+  return true;
+}
+
+async function jumpToCity(q) {
+  const r = await fetch(
+    'https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(q) + '&format=json&limit=1',
+    { headers: { 'Accept-Language': 'en' } }
+  );
+  const results = await r.json();
+  if (!results.length) return false;
+  map.setView([parseFloat(results[0].lat), parseFloat(results[0].lon)], 10);
+  return true;
+}
+
+async function runSearch() {
+  const input = document.getElementById('search-input');
+  const q = (input && input.value || '').trim();
   if (!q) return;
-  try {
-    const r = await fetch('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(q) + '&format=json&limit=1', {headers:{'Accept-Language':'en'}});
-    const results = await r.json();
-    if (!results.length) { alert('City not found: "' + q + '"'); return; }
-    map.setView([parseFloat(results[0].lat), parseFloat(results[0].lon)], 10);
+
+  setSearchStatus('Searching…');
+
+  // 1) Flight / hex / registration against currently loaded markers
+  const hit = findAircraftInView(q);
+  if (hit && hit.how === 'ambiguous') {
+    setSearchStatus('Multiple flights match "' + q + '" (' + hit.count + '). Try a fuller callsign, hex, or reg.', 'err');
+    return;
+  }
+  if (hit && hit.ac) {
+    if (!focusAircraft(hit.ac)) {
+      setSearchStatus('Matched flight has no position yet.', 'err');
+      return;
+    }
+    const label = (hit.ac.flight || '').trim() || (hit.ac.r || '').trim() || String(hit.ac.hex || '').toUpperCase();
+    setSearchStatus('Found ' + label, 'ok');
     input.value = '';
-  } catch(e) { alert('Geocoding failed.'); }
+    return;
+  }
+
+  // 2) Fall back to city / place geocode
+  try {
+    const ok = await jumpToCity(q);
+    if (!ok) {
+      setSearchStatus('No flight or place found for "' + q + '".', 'err');
+      return;
+    }
+    setSearchStatus('Jumped to ' + q, 'ok');
+    input.value = '';
+  } catch (e) {
+    setSearchStatus('Geocoding failed. Check your connection.', 'err');
+  }
 }
 
 // ── Start ─────────────────────────────────────────────────────────────────────
