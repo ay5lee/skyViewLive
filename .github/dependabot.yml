@@ -1,0 +1,14 @@
+# Mirrors GroceryMate (ay5lee/groceryApp) Dependabot coverage from PR #8.
+# skyViewLive has no package.json / requirements.txt (stdlib + static HTML),
+# so ecosystems are docker + github-actions only.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
