@@ -577,8 +577,68 @@ function makeIcon(hdg, color, label, logoIata, route, category) {
   });
 }
 
+// ── Prefs (localStorage) ──────────────────────────────────────────────────────
+const PREFS_KEY = 'skyview.prefs.v1';
+const DEFAULT_MAP_CENTER = [22.32, 114.17];
+const DEFAULT_MAP_ZOOM = 10;
+const AC_FILTERS = ['all', 'airborne', 'ground'];
+const TYPE_FILTERS = ['all', 'commercial', 'cargo', 'private', 'special'];
+
+function loadPrefs() {
+  try {
+    const raw = localStorage.getItem(PREFS_KEY);
+    if (!raw) return {};
+    const data = JSON.parse(raw);
+    return data && typeof data === 'object' ? data : {};
+  } catch (e) {
+    return {};
+  }
+}
+
+function savePrefs(patch) {
+  try {
+    const next = Object.assign({}, loadPrefs(), patch);
+    localStorage.setItem(PREFS_KEY, JSON.stringify(next));
+  } catch (e) {
+    /* quota / private mode — ignore */
+  }
+}
+
+function readSavedMapView() {
+  const prefs = loadPrefs();
+  const view = prefs.mapView;
+  if (!view || typeof view !== 'object') return null;
+  const lat = Number(view.lat);
+  const lon = Number(view.lon);
+  const zoom = Number(view.zoom);
+  if (!Number.isFinite(lat) || !Number.isFinite(lon) || !Number.isFinite(zoom)) return null;
+  if (lat < -90 || lat > 90 || lon < -180 || lon > 180) return null;
+  if (zoom < 1 || zoom > 19) return null;
+  return { center: [lat, lon], zoom: zoom };
+}
+
+function persistMapView() {
+  const c = map.getCenter();
+  savePrefs({
+    mapView: { lat: c.lat, lon: c.lng, zoom: map.getZoom() },
+  });
+}
+
+function persistFilters() {
+  savePrefs({ acFilter: acFilter, typeFilter: typeFilter });
+}
+
+const _savedPrefs = loadPrefs();
+const _savedView = readSavedMapView();
+let acFilter = AC_FILTERS.indexOf(_savedPrefs.acFilter) >= 0 ? _savedPrefs.acFilter : 'all';
+let typeFilter = TYPE_FILTERS.indexOf(_savedPrefs.typeFilter) >= 0 ? _savedPrefs.typeFilter : 'all';
+
 // ── Map ───────────────────────────────────────────────────────────────────────
-const map = L.map('map', {center:[22.32,114.17], zoom:10, zoomControl:true});
+const map = L.map('map', {
+  center: _savedView ? _savedView.center : DEFAULT_MAP_CENTER,
+  zoom: _savedView ? _savedView.zoom : DEFAULT_MAP_ZOOM,
+  zoomControl: true,
+});
 if (window.GOOGLE_MAPS_KEY) {
   L.gridLayer.googleMutant({type: 'roadmap'}).addTo(map);
 } else {
@@ -593,23 +653,25 @@ const acData   = {};
 const acAnchor = {};
 let   proxyOk   = false;
 let   animFrame  = null;
-let acFilter   = 'all';  // 'all' | 'airborne' | 'ground'
-let typeFilter = 'all';  // 'all' | 'commercial' | 'cargo' | 'private' | 'special'
 let panelSelectedHex = null;  // ICAO hex of aircraft shown in detail panel
 
-function setFilter(f) {
+function setFilter(f, opts) {
+  if (AC_FILTERS.indexOf(f) < 0) f = 'all';
   acFilter = f;
   ['all','airborne','ground'].forEach(function(id) {
     document.getElementById('f-' + id).classList.toggle('active', id === f);
   });
+  if (!opts || opts.persist !== false) persistFilters();
   applyFilter();
 }
 
-function setTypeFilter(f) {
+function setTypeFilter(f, opts) {
+  if (TYPE_FILTERS.indexOf(f) < 0) f = 'all';
   typeFilter = f;
   ['all','commercial','cargo','private','special'].forEach(function(id) {
     document.getElementById('t-' + id).classList.toggle('active', id === f);
   });
+  if (!opts || opts.persist !== false) persistFilters();
   applyFilter();
 }
 
@@ -1270,10 +1332,15 @@ async function runSearch() {
 }
 
 // ── Start ─────────────────────────────────────────────────────────────────────
+// Restore filter button active states from prefs (defaults already match HTML).
+setFilter(acFilter, { persist: false });
+setTypeFilter(typeFilter, { persist: false });
+
 fetchFlights();
 setInterval(fetchFlights, 30000);
 let moveTimer = null;
 map.on('moveend', function() {
+  persistMapView();
   clearTimeout(moveTimer);
   moveTimer = setTimeout(fetchFlights, 800);
 });
