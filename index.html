@@ -581,6 +581,7 @@ let   proxyOk   = false;
 let   animFrame  = null;
 let acFilter   = 'all';  // 'all' | 'airborne' | 'ground'
 let typeFilter = 'all';  // 'all' | 'commercial' | 'cargo' | 'private' | 'special'
+let panelSelectedHex = null;  // ICAO hex of aircraft shown in detail panel
 
 function setFilter(f) {
   acFilter = f;
@@ -944,6 +945,11 @@ function updateMarkers(aircraft) {
       markers[hex] = m;
     }
 
+    // Keep open detail panel in sync with latest poll data (no open/close flicker)
+    if (hex === panelSelectedHex) {
+      fillPanelTelemetry(ac);
+    }
+
     // Pre-fetch route for new airborne callsigns
     if (cs && !onGround && !(key in routeCache) && !(key in routePromises)) {
       setTimeout(function() {
@@ -951,7 +957,7 @@ function updateMarkers(aircraft) {
           fetchRoute(cs, mkt, capturedAc).then(function(fr) {
             rebuildIcon(hex);
             const panel = document.getElementById('panel');
-            if (panel.dataset.cs === cs) renderRoute(fr, capturedAc);
+            if (panel.dataset.hex === hex || panel.dataset.cs === cs) renderRoute(fr, capturedAc);
           });
         })(ac);
       }, delay);
@@ -960,7 +966,10 @@ function updateMarkers(aircraft) {
 
     // Hexdb fallback for unknowns
     if (!getAirline(cs) && !(hex in hexdbCache)) {
-      lookupHexdb(hex).then(function() { rebuildIcon(hex); });
+      lookupHexdb(hex).then(function() {
+        rebuildIcon(hex);
+        if (hex === panelSelectedHex && acData[hex]) fillPanelTelemetry(acData[hex]);
+      });
     }
   });
 
@@ -1016,34 +1025,14 @@ function renderRoute(fr, ac) {
 }
 
 // ── Detail panel ──────────────────────────────────────────────────────────────
-function showPanel(ac) {
+/** Update telemetry / identity fields without resetting logo or route UI. */
+function fillPanelTelemetry(ac) {
   if (!ac) return;
   const cs       = (ac.flight || '').trim();
   const hex      = ac.hex || '';
   const airline  = resolveAirline(cs, hex);
   const onGround = String(ac.alt_baro).toLowerCase() === 'ground';
   const mkt      = toMarketingFlight(cs, airline) || hex.toUpperCase();
-
-  // Logo
-  const logoBox = document.getElementById('p-logo');
-  logoBox.innerHTML = '';
-  if (airline && airline.iata) {
-    const img = new Image(); img.width=32; img.height=32; img.style.objectFit='contain';
-    const _iata = airline.iata;
-    let _attempt = 0;
-    img.onerror = function() {
-      _attempt++;
-      if (_attempt < LOGO_SOURCES.length) {
-        img.src = LOGO_SOURCES[_attempt](_iata);
-      } else {
-        logoBox.innerHTML = '<span class="logo-fb">' + _iata + '</span>';
-      }
-    };
-    img.src = LOGO_SOURCES[0](airline.iata);
-    logoBox.appendChild(img);
-  } else {
-    logoBox.innerHTML = '<span class="logo-fb">' + cs.slice(0,3) + '</span>';
-  }
 
   document.getElementById('p-flight').textContent = mkt;
   document.getElementById('p-airline').textContent = airline
@@ -1061,31 +1050,81 @@ function showPanel(ac) {
   document.getElementById('p-type').textContent = ac.t  || '—';
   document.getElementById('p-reg').textContent  = ac.r  || '—';
   document.getElementById('p-sqk').textContent  = ac.squawk || '—';
-  document.getElementById('p-hex').textContent  = (ac.hex||'').toUpperCase();
-  document.getElementById('p-footer').textContent =
-    ac.lat.toFixed(4) + '°N · ' + ac.lon.toFixed(4) + '°E · ' + (ac.dst ? ac.dst.toFixed(1) : '?') + ' km from centre';
+  document.getElementById('p-hex').textContent  = hex.toUpperCase();
+  if (ac.lat != null && ac.lon != null) {
+    document.getElementById('p-footer').textContent =
+      ac.lat.toFixed(4) + '°N · ' + ac.lon.toFixed(4) + '°E · ' + (ac.dst ? ac.dst.toFixed(1) : '?') + ' km from centre';
+  }
+}
 
-  // Show panel
-  const panel = document.getElementById('panel');
-  panel.dataset.cs = cs;
-  panel.style.display = 'none';
-  requestAnimationFrame(function() { panel.style.display = 'block'; });
+function showPanel(ac) {
+  if (!ac) return;
+  const cs       = (ac.flight || '').trim();
+  const hex      = ac.hex || '';
+  const airline  = resolveAirline(cs, hex);
+  const mkt      = toMarketingFlight(cs, airline) || hex.toUpperCase();
+  const panel    = document.getElementById('panel');
+  const sameAc   = panelSelectedHex === hex && panel.style.display === 'block';
 
-  // Route
-  const routeEl = document.getElementById('p-route');
-  routeEl.className = 'route-loading';
-  routeEl.textContent = cs ? 'Loading route…' : 'No callsign';
+  panelSelectedHex = hex;
 
-  if (cs) {
-    var _ac = ac;
-    fetchRoute(cs, mkt, ac).then(function(fr) {
-      if (document.getElementById('panel').dataset.cs === cs) renderRoute(fr, _ac);
-    });
+  // Logo — only rebuild when opening a different aircraft (avoids flicker on re-click / poll)
+  if (!sameAc) {
+    const logoBox = document.getElementById('p-logo');
+    logoBox.innerHTML = '';
+    if (airline && airline.iata) {
+      const img = new Image(); img.width=32; img.height=32; img.style.objectFit='contain';
+      const _iata = airline.iata;
+      let _attempt = 0;
+      img.onerror = function() {
+        _attempt++;
+        if (_attempt < LOGO_SOURCES.length) {
+          img.src = LOGO_SOURCES[_attempt](_iata);
+        } else {
+          logoBox.innerHTML = '<span class="logo-fb">' + _iata + '</span>';
+        }
+      };
+      img.src = LOGO_SOURCES[0](airline.iata);
+      logoBox.appendChild(img);
+    } else {
+      logoBox.innerHTML = '<span class="logo-fb">' + cs.slice(0,3) + '</span>';
+    }
+  }
+
+  fillPanelTelemetry(ac);
+
+  panel.dataset.cs  = cs;
+  panel.dataset.hex = hex;
+
+  // Show panel (skip hide/show flash when already open for this aircraft)
+  if (!sameAc) {
+    panel.style.display = 'none';
+    requestAnimationFrame(function() { panel.style.display = 'block'; });
+  } else {
+    panel.style.display = 'block';
+  }
+
+  // Route — only re-fetch when switching aircraft
+  if (!sameAc) {
+    const routeEl = document.getElementById('p-route');
+    routeEl.className = 'route-loading';
+    routeEl.textContent = cs ? 'Loading route…' : 'No callsign';
+
+    if (cs) {
+      var _ac = ac;
+      fetchRoute(cs, mkt, ac).then(function(fr) {
+        if (document.getElementById('panel').dataset.hex === hex) renderRoute(fr, _ac);
+      });
+    }
   }
 }
 
 function closePanel() {
-  document.getElementById('panel').style.display = 'none';
+  panelSelectedHex = null;
+  const panel = document.getElementById('panel');
+  panel.style.display = 'none';
+  delete panel.dataset.cs;
+  delete panel.dataset.hex;
   clearFlightPath();
 }
 
