@@ -1,6 +1,20 @@
 FROM python:3.15-slim
+
+# Clear fixed OS vulns; drop pip (unused at runtime — clears vendored/SBOM
+# msgpack/urllib3/setuptools findings that ship with the official image).
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends --only-upgrade zlib1g \
+ && rm -rf /var/lib/apt/lists/* \
+ && PIP_ROOT_USER_ACTION=ignore pip uninstall -y pip \
+ && rm -rf /usr/local/lib/python*/site-packages/pip* \
+ && useradd --create-home --uid 10001 --shell /usr/sbin/nologin appuser
+
 WORKDIR /app
 COPY proxy.py .
 COPY data/ data/
-RUN mkdir -p /app/cache && echo '{}' > /app/cache/route_cache.json
+RUN mkdir -p /app/cache \
+ && echo '{}' > /app/cache/route_cache.json \
+ && chown -R appuser:appuser /app
+
+USER appuser
 CMD ["python3", "-u", "proxy.py"]
