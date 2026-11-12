@@ -7,7 +7,7 @@ services:
       - HTTPS_PROXY=${HTTPS_PROXY:-}
       - NO_PROXY=${NO_PROXY:-}
     volumes:
-      - ./route_cache.json:/app/route_cache.json
+      - route_cache:/app/cache
 
   frontend:
     image: nairda8/skyview-frontend:latest
@@ -16,3 +16,6 @@ services:
       - "8080:80"
     depends_on:
       - proxy
+
+volumes:
+  route_cache:
