@@ -295,113 +295,16 @@ header {
 <script>
 const PROXY = '/api';
 
-// ── Airline registry ──────────────────────────────────────────────────────────
-const AIRLINES = {
-  CPA:{name:'Cathay Pacific',       iata:'CX', color:'#006564'},
-  HKE:{name:'HK Express',           iata:'UO', color:'#E4002B'},
-  HKC:{name:'HK Air Cargo',         iata:'RH', color:'#334155'},
-  HGB:{name:'Greater Bay Airlines', iata:'HB', color:'#C60C30'},
-  CRK:{name:'Hong Kong Airlines',   iata:'HX', color:'#CC0000'},
-  CCA:{name:'Air China',            iata:'CA', color:'#CC0000'},
-  CSN:{name:'China Southern',       iata:'CZ', color:'#003087'},
-  CES:{name:'China Eastern',        iata:'MU', color:'#CC0000'},
-  CSZ:{name:'Shenzhen Airlines',    iata:'ZH', color:'#003087'},
-  CXA:{name:'Xiamen Air',           iata:'MF', color:'#003087'},
-  CHH:{name:'Hainan Airlines',      iata:'HU', color:'#CC0000'},
-  CSC:{name:'Sichuan Airlines',     iata:'3U', color:'#CC0000'},
-  CQH:{name:'Spring Airlines',      iata:'9C', color:'#FF6600'},
-  CSS:{name:'Donghai Airlines',     iata:'8L', color:'#003087'},
-  CDG:{name:'Shandong Airlines',    iata:'SC', color:'#003087'},
-  CBJ:{name:'Beijing Capital Air',  iata:'JD', color:'#003087'},
-  GCR:{name:'Tianjin Airlines',     iata:'G8', color:'#CC0000'},
-  SHQ:{name:'Shanghai Airlines',    iata:'FM', color:'#CC0000'},
-  UEA:{name:'Chengdu Airlines',     iata:'EU', color:'#003087'},
-  GXA:{name:'Guangxi Airways',      iata:'GX', color:'#CC0000'},
-  LKE:{name:'Lucky Air',            iata:'LK', color:'#003087'},
-  OKA:{name:'Okay Airways',         iata:'BK', color:'#FF6600'},
-  DKH:{name:'Kunming Airlines',     iata:'KN', color:'#003087'},
-  FZA:{name:'Fuzhou Airlines',      iata:'FU', color:'#CC0000'},
-  BAV:{name:'Beijing Capital Air',  iata:'JD', color:'#003087'},
-  CYH:{name:'Colorful Guizhou',     iata:'GY', color:'#003087'},
-  AMU:{name:'Air Macau',            iata:'NX', color:'#006400'},
-  RLH:{name:'Ruili Airlines',       iata:'DR', color:'#003087'},
-  KAL:{name:'Korean Air',           iata:'KE', color:'#00256C'},
-  AAR:{name:'Asiana Airlines',      iata:'OZ', color:'#CC0000'},
-  JJA:{name:'Jin Air',              iata:'LJ', color:'#003087'},
-  TWB:{name:"T'way Air",            iata:'TW', color:'#FF6600'},
-  ABL:{name:'Air Busan',            iata:'BX', color:'#003087'},
-  ANA:{name:'All Nippon Airways',   iata:'NH', color:'#003087'},
-  JAL:{name:'Japan Airlines',       iata:'JL', color:'#CC0000'},
-  JST:{name:'Jetstar Japan',        iata:'GK', color:'#FF6600'},
-  APJ:{name:'Peach Aviation',       iata:'MM', color:'#CC0066'},
-  SJX:{name:'Starlux Airlines',     iata:'JX', color:'#6C3483'},
-  CAL:{name:'China Airlines',       iata:'CI', color:'#CC0000'},
-  EVA:{name:'EVA Air',              iata:'BR', color:'#007C5E'},
-  TBA:{name:'Tigerair Taiwan',      iata:'IT', color:'#FF6600'},
-  SIA:{name:'Singapore Airlines',   iata:'SQ', color:'#003087'},
-  MAS:{name:'Malaysia Airlines',    iata:'MH', color:'#CC0000'},
-  THA:{name:'Thai Airways',         iata:'TG', color:'#6A0DAD'},
-  AXM:{name:'AirAsia X',            iata:'D7', color:'#FF0000'},
-  VJC:{name:'VietJet Air',          iata:'VJ', color:'#CC0000'},
-  HVN:{name:'Vietnam Airlines',     iata:'VN', color:'#003087'},
-  GIA:{name:'Garuda Indonesia',     iata:'GA', color:'#003087'},
-  PAL:{name:'Philippine Airlines',  iata:'PR', color:'#003087'},
-  CEB:{name:'Cebu Pacific',         iata:'5J', color:'#D4A017'},
-  BKP:{name:'Bangkok Airways',      iata:'PG', color:'#6A0DAD'},
-  SLK:{name:'Thai AirAsia',         iata:'FD', color:'#FF0000'},
-  RBA:{name:'Royal Brunei',         iata:'BI', color:'#CC0000'},
-  AIC:{name:'Air India',            iata:'AI', color:'#CC0000'},
-  PIA:{name:'Pakistan Intl',        iata:'PK', color:'#006600'},
-  UAE:{name:'Emirates',             iata:'EK', color:'#C60C30'},
-  QTR:{name:'Qatar Airways',        iata:'QR', color:'#5C0632'},
-  ETD:{name:'Etihad Airways',       iata:'EY', color:'#B8962E'},
-  SVA:{name:'Saudia',               iata:'SV', color:'#006600'},
-  OMA:{name:'Oman Air',             iata:'WY', color:'#CC0000'},
-  DLH:{name:'Lufthansa',            iata:'LH', color:'#05164D'},
-  BAW:{name:'British Airways',      iata:'BA', color:'#075AAA'},
-  AFR:{name:'Air France',           iata:'AF', color:'#002395'},
-  KLM:{name:'KLM',                  iata:'KL', color:'#00A1E0'},
-  SWR:{name:'Swiss',                iata:'LX', color:'#CC0000'},
-  THY:{name:'Turkish Airlines',     iata:'TK', color:'#CC0000'},
-  FIN:{name:'Finnair',              iata:'AY', color:'#003087'},
-  AUA:{name:'Austrian Airlines',    iata:'OS', color:'#CC0000'},
-  VIR:{name:'Virgin Atlantic',      iata:'VS', color:'#CC0000'},
-  AAL:{name:'American Airlines',    iata:'AA', color:'#0078D2'},
-  UAL:{name:'United Airlines',      iata:'UA', color:'#002244'},
-  DAL:{name:'Delta Air Lines',      iata:'DL', color:'#CC0000'},
-  SWA:{name:'Southwest Airlines',   iata:'WN', color:'#304CB2'},
-  ASA:{name:'Alaska Airlines',      iata:'AS', color:'#01426A'},
-  JBU:{name:'JetBlue',              iata:'B6', color:'#003876'},
-  ACA:{name:'Air Canada',           iata:'AC', color:'#CC0000'},
-  WJA:{name:'WestJet',              iata:'WS', color:'#0033A0'},
-  SAS:{name:'Scandinavian Airlines',iata:'SK', color:'#003087'},
-  RYR:{name:'Ryanair',              iata:'FR', color:'#073590'},
-  EZY:{name:'easyJet',              iata:'U2', color:'#FF6600'},
-  WZZ:{name:'Wizz Air',             iata:'W6', color:'#C6007E'},
-  IBE:{name:'Iberia',               iata:'IB', color:'#CC0000'},
-  TAP:{name:'TAP Air Portugal',     iata:'TP', color:'#CC0000'},
-  LOT:{name:'LOT Polish Airlines',  iata:'LO', color:'#003087'},
-  BEL:{name:'Brussels Airlines',    iata:'SN', color:'#CC0000'},
-  TUI:{name:'TUI Airways',          iata:'BY', color:'#003087'},
-  NLY:{name:'Niki',                 iata:'HG', color:'#CC0000'},
-  QFA:{name:'Qantas',               iata:'QF', color:'#CC0000'},
-  ANZ:{name:'Air New Zealand',      iata:'NZ', color:'#003087'},
-  SIA:{name:'Singapore Airlines',   iata:'SQ', color:'#003087'},
-  ETH:{name:'Ethiopian Airlines',   iata:'ET', color:'#006600'},
-  KQA:{name:'Kenya Airways',        iata:'KQ', color:'#CC0000'},
-  RAM:{name:'Royal Air Maroc',      iata:'AT', color:'#CC0000'},
-  MSR:{name:'EgyptAir',             iata:'MS', color:'#003087'},
-  GFA:{name:'Gulf Air',             iata:'GF', color:'#CC0000'},
-  FLY:{name:'flybe',                iata:'BE', color:'#7C3AED'},
-  GTI:{name:'Atlas Air',            iata:'5Y', color:'#1A365D'},
-  MNB:{name:'MNG Airlines',         iata:'MB', color:'#334155'},
-  AZG:{name:'Silk Way Airlines',    iata:'ZP', color:'#1A365D'},
-  FDX:{name:'FedEx',                iata:'FX', color:'#FF6600'},
-  UPS:{name:'UPS Airlines',         iata:'5X', color:'#5C3A1E'},
-  CLX:{name:'Cargolux',             iata:'CV', color:'#003087'},
-  ESR:{name:'Eastar Jet',           iata:'ZE', color:'#FF6600'},
-  MGL:{name:'MIAT Mongolian',       iata:'OM', color:'#003087'},
-};
+// ── Airline registry (loaded from /data/airlines.json) ────────────────────────
+let AIRLINES = {};
+
+async function loadAirlines() {
+  const r = await fetch('/data/airlines.json', { cache: 'no-cache' });
+  if (!r.ok) throw new Error('Failed to load airlines.json (' + r.status + ')');
+  const data = await r.json();
+  if (!data || typeof data !== 'object') throw new Error('Invalid airlines.json');
+  AIRLINES = data;
+}
 
 function getAirline(cs) {
   if (!cs) return null;
@@ -1336,15 +1239,24 @@ async function runSearch() {
 setFilter(acFilter, { persist: false });
 setTypeFilter(typeFilter, { persist: false });
 
-fetchFlights();
-setInterval(fetchFlights, 30000);
-let moveTimer = null;
-map.on('moveend', function() {
-  persistMapView();
-  clearTimeout(moveTimer);
-  moveTimer = setTimeout(fetchFlights, 800);
-});
-animatePlanes();
+async function boot() {
+  try {
+    await loadAirlines();
+  } catch (e) {
+    console.error(e);
+    document.getElementById('status-text').textContent = 'Airline data failed to load';
+  }
+  fetchFlights();
+  setInterval(fetchFlights, 30000);
+  let moveTimer = null;
+  map.on('moveend', function() {
+    persistMapView();
+    clearTimeout(moveTimer);
+    moveTimer = setTimeout(fetchFlights, 800);
+  });
+  animatePlanes();
+}
+boot();
 </script>
 </body>
 </html>
