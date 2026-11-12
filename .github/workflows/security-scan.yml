@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           # Push report updates back to the PR branch (or main on push).
           ref: ${{ github.head_ref || github.ref_name }}
