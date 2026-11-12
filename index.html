@@ -92,6 +92,59 @@ header {
 .filter-toggle button.active.special { background:#0891B2; }
 .filter-toggle button:not(:last-child) { border-right:1px solid #CBD5E1; }
 
+.filter-open-btn {
+  display:none;
+  background:#F8FAFC; border:1px solid #CBD5E1; border-radius:6px;
+  padding:3px 10px; font-size:11px; cursor:pointer; color:#4A5568; font-family:inherit;
+}
+.filter-open-btn:hover, .filter-open-btn[aria-expanded="true"] {
+  background:#DBEAFE; border-color:#2563EB; color:#2563EB;
+}
+
+/* Mobile filter sheet */
+#filter-sheet {
+  display:none; position:fixed; inset:0; z-index:1200;
+}
+#filter-sheet.open { display:block; }
+.filter-sheet-backdrop {
+  position:absolute; inset:0; background:rgba(15,23,42,.35);
+}
+.filter-sheet-panel {
+  position:absolute; left:0; right:0; bottom:0;
+  background:#fff; border-radius:14px 14px 0 0;
+  border:1px solid #DDE6F0; border-bottom:none;
+  box-shadow:0 -8px 28px rgba(0,0,0,.14);
+  padding:10px 16px calc(16px + env(safe-area-inset-bottom, 0px));
+  animation:sheetUp .2s ease;
+}
+@keyframes sheetUp {
+  from { transform:translateY(18px); opacity:0; }
+  to { transform:translateY(0); opacity:1; }
+}
+.filter-sheet-handle {
+  width:36px; height:4px; border-radius:999px; background:#CBD5E1;
+  margin:2px auto 12px;
+}
+.filter-sheet-head {
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:12px;
+}
+.filter-sheet-head h2 {
+  font-size:14px; font-weight:700; color:#1A2332; letter-spacing:-.2px;
+}
+.filter-sheet-close {
+  background:none; border:none; color:#94A3B8; font-size:18px;
+  cursor:pointer; line-height:1; padding:2px 6px; border-radius:4px;
+}
+.filter-sheet-close:hover { color:#1A2332; }
+#filter-sheet .filter-group { gap:10px; }
+#filter-sheet .filter-toggle { width:100%; }
+#filter-sheet .filter-toggle button { flex:1; padding:8px 6px; font-size:12px; }
+.filter-sheet-actions {
+  display:flex; gap:8px; margin-top:14px;
+}
+.filter-sheet-actions .refresh-btn { flex:1; padding:8px 10px; font-size:12px; }
+
 /* ── Map ── */
 #map { flex:1; z-index:1; }
 
@@ -209,6 +262,45 @@ header {
   box-shadow:0 3px 12px rgba(0,0,0,.1); display:none;
 }
 #proxy-warn code { background:rgba(0,0,0,.08); padding:1px 5px; border-radius:3px; font-family:monospace; font-size:11px; }
+
+/* ── Narrow viewports: compact header, filter sheet, full-bleed panel ── */
+@media (max-width: 860px) {
+  header {
+    height:auto; min-height:52px;
+    padding:8px 10px; gap:8px; flex-wrap:nowrap;
+  }
+  .logo { font-size:13px; gap:6px; flex-shrink:0; }
+  .logo svg { width:22px; height:22px; }
+  .hdr-search { flex:1; min-width:0; max-width:none; }
+  .hdr-search input { width:100%; min-width:0; }
+  .hdr-right { gap:8px; flex-shrink:0; }
+  .hdr-right .hdr-filters,
+  .hdr-right > .refresh-btn { display:none; }
+  .hdr-right .badge { display:none; }
+  .filter-open-btn { display:inline-flex; align-items:center; }
+  #status-text { max-width:72px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+  #panel {
+    top:auto; right:0; left:0; bottom:0; width:100%;
+    max-height:min(72dvh, 560px);
+    border-radius:14px 14px 0 0;
+    border-left:none; border-right:none; border-bottom:none;
+    animation:sheetUp .2s ease;
+  }
+
+  #legend {
+    bottom:12px; left:10px;
+    padding:7px 10px; font-size:10px;
+    max-width:42vw;
+  }
+
+  .search-status { max-width:min(260px, 70vw); }
+}
+
+@media (max-width: 480px) {
+  .logo span.brand-rest { display:none; }
+  #status-text { display:none; }
+}
 </style>
 </head>
 <body>
@@ -219,7 +311,7 @@ header {
       <circle cx="13" cy="13" r="13" fill="#EFF6FF"/>
       <path d="M13 5l1.8 5.4H20l-4.5 3.3 1.7 5.3L13 16l-4.2 3 1.7-5.3L6 10.4h5.2L13 5z" fill="#2563EB"/>
     </svg>
-    Sky<span>View</span> Live
+    Sky<span>View</span><span class="brand-rest"> Live</span>
   </div>
   <div class="hdr-search">
     <input id="search-input" type="text" placeholder="Flight, hex, reg, or city…" autocomplete="off"
@@ -234,23 +326,52 @@ header {
       <span id="status-text">Connecting…</span>
     </div>
     <div class="badge" id="count">— flights</div>
-    <div class="filter-group">
+    <div class="filter-group hdr-filters">
       <div class="filter-toggle">
-        <button id="f-all"      class="active" onclick="setFilter('all')">All</button>
-        <button id="f-airborne"            onclick="setFilter('airborne')">✈ Airborne</button>
-        <button id="f-ground"              onclick="setFilter('ground')">⬤ Ground</button>
+        <button type="button" data-ac-filter="all" class="active" onclick="setFilter('all')">All</button>
+        <button type="button" data-ac-filter="airborne" onclick="setFilter('airborne')">✈ Airborne</button>
+        <button type="button" data-ac-filter="ground" onclick="setFilter('ground')">⬤ Ground</button>
       </div>
       <div class="filter-toggle">
-        <button id="t-all"      class="active" onclick="setTypeFilter('all')">All Types</button>
-        <button id="t-commercial"          onclick="setTypeFilter('commercial')">Commercial</button>
-        <button id="t-cargo"    class="cargo"  onclick="setTypeFilter('cargo')">Cargo</button>
-        <button id="t-private"  class="private" onclick="setTypeFilter('private')">Private</button>
-        <button id="t-special"  class="special" onclick="setTypeFilter('special')">Special</button>
+        <button type="button" data-type-filter="all" class="active" onclick="setTypeFilter('all')">All Types</button>
+        <button type="button" data-type-filter="commercial" onclick="setTypeFilter('commercial')">Commercial</button>
+        <button type="button" data-type-filter="cargo" class="cargo" onclick="setTypeFilter('cargo')">Cargo</button>
+        <button type="button" data-type-filter="private" class="private" onclick="setTypeFilter('private')">Private</button>
+        <button type="button" data-type-filter="special" class="special" onclick="setTypeFilter('special')">Special</button>
       </div>
     </div>
-    <button class="refresh-btn" onclick="fetchFlights()">↻ Refresh</button>
+    <button type="button" class="filter-open-btn" id="filter-open" aria-expanded="false" aria-controls="filter-sheet" onclick="openFilterSheet()">Filters</button>
+    <button type="button" class="refresh-btn" onclick="fetchFlights()">↻ Refresh</button>
   </div>
 </header>
+
+<div id="filter-sheet" aria-hidden="true" role="dialog" aria-label="Flight filters">
+  <div class="filter-sheet-backdrop" onclick="closeFilterSheet()"></div>
+  <div class="filter-sheet-panel">
+    <div class="filter-sheet-handle" aria-hidden="true"></div>
+    <div class="filter-sheet-head">
+      <h2>Filters</h2>
+      <button type="button" class="filter-sheet-close" onclick="closeFilterSheet()" aria-label="Close filters">✕</button>
+    </div>
+    <div class="filter-group">
+      <div class="filter-toggle">
+        <button type="button" data-ac-filter="all" class="active" onclick="setFilter('all')">All</button>
+        <button type="button" data-ac-filter="airborne" onclick="setFilter('airborne')">✈ Airborne</button>
+        <button type="button" data-ac-filter="ground" onclick="setFilter('ground')">⬤ Ground</button>
+      </div>
+      <div class="filter-toggle">
+        <button type="button" data-type-filter="all" class="active" onclick="setTypeFilter('all')">All Types</button>
+        <button type="button" data-type-filter="commercial" onclick="setTypeFilter('commercial')">Commercial</button>
+        <button type="button" data-type-filter="cargo" class="cargo" onclick="setTypeFilter('cargo')">Cargo</button>
+        <button type="button" data-type-filter="private" class="private" onclick="setTypeFilter('private')">Private</button>
+        <button type="button" data-type-filter="special" class="special" onclick="setTypeFilter('special')">Special</button>
+      </div>
+    </div>
+    <div class="filter-sheet-actions">
+      <button type="button" class="refresh-btn" onclick="fetchFlights(); closeFilterSheet()">↻ Refresh</button>
+    </div>
+  </div>
+</div>
 
 <div id="map"></div>
 
@@ -561,8 +682,8 @@ let panelSelectedHex = null;  // ICAO hex of aircraft shown in detail panel
 function setFilter(f, opts) {
   if (AC_FILTERS.indexOf(f) < 0) f = 'all';
   acFilter = f;
-  ['all','airborne','ground'].forEach(function(id) {
-    document.getElementById('f-' + id).classList.toggle('active', id === f);
+  document.querySelectorAll('[data-ac-filter]').forEach(function(btn) {
+    btn.classList.toggle('active', btn.getAttribute('data-ac-filter') === f);
   });
   if (!opts || opts.persist !== false) persistFilters();
   applyFilter();
@@ -571,12 +692,32 @@ function setFilter(f, opts) {
 function setTypeFilter(f, opts) {
   if (TYPE_FILTERS.indexOf(f) < 0) f = 'all';
   typeFilter = f;
-  ['all','commercial','cargo','private','special'].forEach(function(id) {
-    document.getElementById('t-' + id).classList.toggle('active', id === f);
+  document.querySelectorAll('[data-type-filter]').forEach(function(btn) {
+    btn.classList.toggle('active', btn.getAttribute('data-type-filter') === f);
   });
   if (!opts || opts.persist !== false) persistFilters();
   applyFilter();
 }
+
+function openFilterSheet() {
+  const sheet = document.getElementById('filter-sheet');
+  const btn = document.getElementById('filter-open');
+  sheet.classList.add('open');
+  sheet.setAttribute('aria-hidden', 'false');
+  if (btn) btn.setAttribute('aria-expanded', 'true');
+}
+
+function closeFilterSheet() {
+  const sheet = document.getElementById('filter-sheet');
+  const btn = document.getElementById('filter-open');
+  sheet.classList.remove('open');
+  sheet.setAttribute('aria-hidden', 'true');
+  if (btn) btn.setAttribute('aria-expanded', 'false');
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeFilterSheet();
+});
 
 function applyFilter() {
   Object.keys(markers).forEach(function(hex) {
