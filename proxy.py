@@ -2,20 +2,34 @@
 """
 SkyView Live proxy — local server on port 8765.
 - /flights : live ADS-B positions from adsb.lol (global)
-- /route   : real-time route lookup with OpenSky validation
+- /route   : route lookup via FMS + adsbdb + geometric checks
 
 Usage:  python3 proxy.py   (Python 3.6+, no extra packages)
 """
 
 import json, math, time, threading, os
 import urllib.request, urllib.error, urllib.parse
-from http.server import BaseHTTPRequestHandler, HTTPServer
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 PORT       = 8765
 ADSB_URL   = "https://api.adsb.lol/v2/lat/{lat}/lon/{lon}/dist/{dist}"
-OPENSKY_URL= "https://opensky-network.org/api/flights/aircraft?icao24={hex}&begin={begin}&end={end}"
 ADSBDB_URL = "https://api.adsbdb.com/v0/callsign/{callsign}"
+# OpenSky /api/flights/aircraft is OAuth-only + prior-day batch — not used on the live path.
+OPENSKY_URL = "https://opensky-network.org/api/flights/aircraft?icao24={hex}&begin={begin}&end={end}"
 UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
+
+# Cap concurrent upstream HTTP so ThreadingHTTPServer retries don't stampede APIs.
+UPSTREAM_FETCH_LIMIT = int(os.environ.get('UPSTREAM_FETCH_LIMIT', '8'))
+_fetch_sem = threading.Semaphore(UPSTREAM_FETCH_LIMIT)
+
+# Route-cache TTLs by source (flight numbers reuse daily).
+CACHE_TTL_SEC = {
+    'fms':            6 * 3600,   # hours — FMS is accurate for the active leg
+    'adsbdb':         8 * 3600,   # ≤6–12h
+    'opensky':       24 * 3600,   # day (optional historical only)
+    'opensky+adsbdb': 24 * 3600,
+}
+DEFAULT_CACHE_TTL_SEC = 6 * 3600
 
 # ICAO -> (IATA, city, lat, lon)
 AIRPORTS = {
@@ -101,9 +115,14 @@ AIRPORTS = {
     'MMMX':('MEX','Mexico City',  19.4363, -99.0721),
 }
 
-CACHE_FILE = os.path.join(os.path.dirname(__file__), 'cache', 'route_cache.json')
+CACHE_DIR = os.environ.get(
+    'ROUTE_CACHE_DIR',
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), 'cache'),
+)
+CACHE_FILE = os.path.join(CACHE_DIR, 'route_cache.json')
 _route_cache = {}
 _cache_dirty = 0   # count of unsaved new entries
+_cache_lock = threading.Lock()
 
 def _is_valid_route(r):
     """Return False for known-bad cache entries so they get re-fetched."""
@@ -119,27 +138,73 @@ def _is_valid_route(r):
         return False
     return True
 
+def _ttl_for(source):
+    return CACHE_TTL_SEC.get(source or '', DEFAULT_CACHE_TTL_SEC)
+
+def _is_fresh(entry, now=None):
+    if not entry:
+        return False
+    now = time.time() if now is None else now
+    cached_at = entry.get('cached_at')
+    if cached_at is None:
+        return False  # legacy entries: force refresh so TTL applies
+    return (now - float(cached_at)) <= _ttl_for(entry.get('source'))
+
 def _load_cache():
     global _route_cache
-    os.makedirs(os.path.dirname(CACHE_FILE), exist_ok=True)
+    os.makedirs(CACHE_DIR, exist_ok=True)
     try:
         with open(CACHE_FILE, 'r') as f:
             raw = json.load(f)
-        _route_cache = {k: v for k, v in raw.items() if _is_valid_route(v)}
-        skipped = len(raw) - len(_route_cache)
-        print(f"  📂 Loaded {len(_route_cache)} cached routes from disk"
-              + (f" (dropped {skipped} invalid)" if skipped else ""))
+        now = time.time()
+        kept = {}
+        skipped = 0
+        for k, v in raw.items():
+            if _is_valid_route(v) and _is_fresh(v, now):
+                kept[k] = v
+            else:
+                skipped += 1
+        with _cache_lock:
+            _route_cache = kept
+        print(f"  📂 Loaded {len(kept)} cached routes from {CACHE_FILE}"
+              + (f" (dropped {skipped} invalid/expired)" if skipped else ""))
     except FileNotFoundError:
         pass
     except Exception as e:
         print(f"  ⚠ Could not load route cache: {e}")
 
 def _save_cache():
+    """Persist route cache. Caller must hold _cache_lock (or accept a snapshot race)."""
     try:
-        with open(CACHE_FILE, 'w') as f:
+        os.makedirs(CACHE_DIR, exist_ok=True)
+        tmp = CACHE_FILE + '.tmp'
+        with open(tmp, 'w') as f:
             json.dump(_route_cache, f)
+        os.replace(tmp, CACHE_FILE)
     except Exception as e:
         print(f"  ⚠ Could not save route cache: {e}")
+
+def _cache_get(key):
+    with _cache_lock:
+        entry = _route_cache.get(key)
+        if not entry:
+            return None
+        if not _is_valid_route(entry) or not _is_fresh(entry):
+            _route_cache.pop(key, None)
+            return None
+        return dict(entry)
+
+def _cache_put(key, result):
+    global _cache_dirty
+    entry = dict(result)
+    entry['cached_at'] = time.time()
+    with _cache_lock:
+        _route_cache[key] = entry
+        _cache_dirty += 1
+        if _cache_dirty >= 10:
+            _cache_dirty = 0
+            _save_cache()
+    return entry
 
 
 def bearing(lat1, lon1, lat2, lon2):
@@ -165,32 +230,45 @@ def dist_km(lat1, lon1, lat2, lon2):
 
 
 def fetch(url, timeout=8, retries=3):
+    """JSON GET with retry/backoff; concurrency capped by _fetch_sem."""
     req = urllib.request.Request(url, headers={"User-Agent": UA})
-    for attempt in range(retries):
-        try:
-            with urllib.request.urlopen(req, timeout=timeout) as r:
-                return json.loads(r.read().decode())
-        except urllib.error.HTTPError as e:
-            if e.code == 429 and attempt < retries - 1:
-                wait = 2 ** attempt   # 1s, 2s, 4s
-                print(f"  ⏳ 429 from {url[:60]}… retrying in {wait}s")
-                time.sleep(wait)
-            else:
-                raise
+    with _fetch_sem:
+        for attempt in range(retries):
+            try:
+                with urllib.request.urlopen(req, timeout=timeout) as r:
+                    return json.loads(r.read().decode())
+            except urllib.error.HTTPError as e:
+                if e.code == 429 and attempt < retries - 1:
+                    wait = 2 ** attempt   # 1s, 2s, 4s
+                    print(f"  ⏳ 429 from {url[:60]}… retrying in {wait}s")
+                    time.sleep(wait)
+                else:
+                    raise
 
 
-def get_opensky_departure(hex24):
-    now = int(time.time())
-    try:
-        flights = fetch(OPENSKY_URL.format(hex=hex24.lower(), begin=now-14400, end=now), timeout=10)
-        if isinstance(flights, list) and flights:
-            flights.sort(key=lambda x: x.get("firstSeen", 0), reverse=True)
-            for f in flights:
-                dep = f.get("estDepartureAirport")
-                if dep:
-                    return dep.upper()
-    except Exception:
-        pass
+def get_opensky_departure_historical(hex24, begin, end, access_token):
+    """
+    Optional OpenSky historical lookup (OAuth2 bearer required).
+    Not used on the live /route path — /api/flights/aircraft is a prior-day
+    batch feed, not same-day departures. Call only with explicit credentials.
+    """
+    if not access_token:
+        return None
+    url = OPENSKY_URL.format(hex=hex24.lower(), begin=int(begin), end=int(end))
+    req = urllib.request.Request(url, headers={
+        "User-Agent": UA,
+        "Authorization": f"Bearer {access_token}",
+    })
+    with _fetch_sem:
+        with urllib.request.urlopen(req, timeout=15) as r:
+            flights = json.loads(r.read().decode())
+    if not isinstance(flights, list) or not flights:
+        return None
+    flights.sort(key=lambda x: x.get("firstSeen", 0), reverse=True)
+    for f in flights:
+        dep = f.get("estDepartureAirport")
+        if dep:
+            return dep.upper()
     return None
 
 
@@ -247,40 +325,14 @@ def origin_from_track(hex24):
     return None
 
 
-def _correct_origin_async(key, result, hex24, ac_lat, ac_lon):
-    """Background thread: try to correct a stale route via OpenSky departure data."""
-    snapshot = dict(result)
-    def run():
-        dep_icao = get_opensky_departure(hex24)
-        if dep_icao:
-            iata, city, lat, lon = icao_to_info(dep_icao)
-            snapshot.update({'orig': iata, 'orig_city': city,
-                             'orig_lat': lat, 'orig_lon': lon,
-                             'source': 'opensky+adsbdb', 'verified': True})
-            print(f"    ✓ {key}: corrected origin → {iata} (OpenSky)")
-            _route_cache[key] = snapshot
-            _persist_cache_if_needed()
-        else:
-            # No reliable data — don't cache anything, let the next request retry
-            print(f"    ~ {key}: OpenSky has no departure data, leaving uncached")
-    threading.Thread(target=run, daemon=True).start()
-
-
-def _persist_cache_if_needed():
-    global _cache_dirty
-    _cache_dirty += 1
-    if _cache_dirty >= 10:   # save every 10 new entries
-        _cache_dirty = 0
-        _save_cache()
-
-
 def get_route(mkt_flight, icao_callsign=None, hex24=None, ac_lat=None, ac_lon=None,
               ac_track=None, fms_orig=None, fms_dest=None):
     key = (mkt_flight or '').upper().strip()
     if not key:
         return None
-    if key in _route_cache:
-        return _route_cache[key]
+    cached = _cache_get(key)
+    if cached is not None:
+        return cached
 
     result = None
 
@@ -302,9 +354,7 @@ def get_route(mkt_flight, icao_callsign=None, hex24=None, ac_lat=None, ac_lon=No
                 'verified':  True,
             }
             print(f"  ✈  {key}: FMS route {orig_iata}→{dest_iata}")
-            _route_cache[key] = result
-            _persist_cache_if_needed()
-            return result
+            return _cache_put(key, result)
         else:
             print(f"  ✗  {key}: FMS same-airport or unresolved ({fms_orig}→{fms_dest}), skipping")
 
@@ -348,12 +398,14 @@ def get_route(mkt_flight, icao_callsign=None, hex24=None, ac_lat=None, ac_lon=No
     #  already near their destination, so origin_from_track() incorrectly returns
     #  the destination airport as the origin.)
 
-    # Step 3: geometric sanity check — plane must lie roughly on the claimed route
+    # Step 2: geometric sanity check — plane must lie roughly on the claimed route.
+    # OpenSky anonymous live correction removed (OAuth + prior-day batch only).
     if result and ac_lat is not None and result.get('orig_lat') and not result.get('verified'):
         orig_lat = result['orig_lat']; orig_lon = result['orig_lon']
         dest_lat = result.get('dest_lat'); dest_lon = result.get('dest_lon')
         d_to_orig = dist_km(ac_lat, ac_lon, orig_lat, orig_lon)
         stale = False
+        route_len = d_to_dest = 0
         if dest_lat is not None:
             route_len = dist_km(orig_lat, orig_lon, dest_lat, dest_lon)
             d_to_dest = dist_km(ac_lat, ac_lon, dest_lat, dest_lon)
@@ -375,17 +427,17 @@ def get_route(mkt_flight, icao_callsign=None, hex24=None, ac_lat=None, ac_lon=No
         else:
             if d_to_orig > 12000:
                 stale = True
-        if stale and hex24:
+        if stale:
             print(f"    ⚠ {key}: plane not on {result['orig']}→{result.get('dest','?')} "
-                  f"(route {route_len:.0f}km, d_orig {d_to_orig:.0f}km, d_dest {d_to_dest:.0f}km) — correcting")
-            _correct_origin_async(key, result, hex24, ac_lat, ac_lon)
+                  f"(route {route_len:.0f}km, d_orig {d_to_orig:.0f}km, d_dest {d_to_dest:.0f}km) "
+                  f"— discarding (no OpenSky live correction)")
+            result = None  # do not cache a bad candidate
         else:
             result['verified'] = True
 
     if result is not None:
-        _route_cache[key] = result
-        _persist_cache_if_needed()
-    return result
+        return _cache_put(key, result)
+    return None
 
 
 # ── Track accumulation ────────────────────────────────────────────────────────
@@ -395,6 +447,7 @@ def get_route(mkt_flight, icao_callsign=None, hex24=None, ac_lat=None, ac_lon=No
 from collections import defaultdict
 
 _tracks = defaultdict(list)
+_tracks_lock = threading.Lock()
 MAX_TRACK_POINTS = 500      # ~2 hrs at 15s refresh
 MAX_TRACK_AGE    = 7200     # drop points older than 2 hours
 
@@ -402,26 +455,29 @@ MAX_TRACK_AGE    = 7200     # drop points older than 2 hours
 def record_positions(aircraft_list):
     """Called after every successful /flights fetch."""
     now = int(time.time())
-    for ac in aircraft_list:
-        if ac.get('lat') is None or ac.get('lon') is None:
-            continue
-        if str(ac.get('alt_baro', '')).lower() == 'ground':
-            continue
-        hex24 = ac['hex']
-        track = _tracks[hex24]
-        # Avoid duplicate if position hasn't changed
-        if track and track[-1][0] == round(ac['lat'], 4) and track[-1][1] == round(ac['lon'], 4):
-            continue
-        track.append((round(ac['lat'], 5), round(ac['lon'], 5),
-                      ac.get('alt_baro'), now))
-        # Trim old points
-        cutoff = now - MAX_TRACK_AGE
-        _tracks[hex24] = [p for p in track if p[3] >= cutoff][-MAX_TRACK_POINTS:]
+    with _tracks_lock:
+        for ac in aircraft_list:
+            if ac.get('lat') is None or ac.get('lon') is None:
+                continue
+            if str(ac.get('alt_baro', '')).lower() == 'ground':
+                continue
+            hex24 = ac['hex']
+            track = _tracks[hex24]
+            # Avoid duplicate if position hasn't changed
+            if track and track[-1][0] == round(ac['lat'], 4) and track[-1][1] == round(ac['lon'], 4):
+                continue
+            track.append((round(ac['lat'], 5), round(ac['lon'], 5),
+                          ac.get('alt_baro'), now))
+            # Trim old points
+            cutoff = now - MAX_TRACK_AGE
+            _tracks[hex24] = [p for p in track if p[3] >= cutoff][-MAX_TRACK_POINTS:]
 
 
 def get_track(hex24):
     """Return list of {lat, lon, alt} for a hex."""
-    return [{'lat': p[0], 'lon': p[1], 'alt': p[2]} for p in _tracks.get(hex24.lower(), [])]
+    with _tracks_lock:
+        pts = list(_tracks.get(hex24.lower(), []))
+    return [{'lat': p[0], 'lon': p[1], 'alt': p[2]} for p in pts]
 
 
 class ProxyHandler(BaseHTTPRequestHandler):
@@ -449,6 +505,17 @@ class ProxyHandler(BaseHTTPRequestHandler):
         parsed = urllib.parse.urlparse(self.path)
         params = urllib.parse.parse_qs(parsed.query)
 
+        if parsed.path == '/health':
+            with _cache_lock:
+                n_cached = len(_route_cache)
+            self._json(200, {
+                'ok': True,
+                'cache_file': CACHE_FILE,
+                'cached_routes': n_cached,
+                'upstream_fetch_limit': UPSTREAM_FETCH_LIMIT,
+            })
+            return
+
         if parsed.path == '/flights':
             lat  = params.get('lat',  ['22.32'])[0]
             lon  = params.get('lon',  ['114.17'])[0]
@@ -456,19 +523,20 @@ class ProxyHandler(BaseHTTPRequestHandler):
             try:
                 url = ADSB_URL.format(lat=lat, lon=lon, dist=dist)
                 body = None
-                for attempt in range(3):
-                    try:
-                        req = urllib.request.Request(url, headers={'User-Agent': UA})
-                        with urllib.request.urlopen(req, timeout=10) as r:
-                            body = r.read()
-                        break
-                    except urllib.error.HTTPError as e:
-                        if e.code == 429 and attempt < 2:
-                            wait = 2 ** attempt
-                            print(f"  ⏳ 429 on /flights, retrying in {wait}s")
-                            time.sleep(wait)
-                        else:
-                            raise
+                with _fetch_sem:
+                    for attempt in range(3):
+                        try:
+                            req = urllib.request.Request(url, headers={'User-Agent': UA})
+                            with urllib.request.urlopen(req, timeout=10) as r:
+                                body = r.read()
+                            break
+                        except urllib.error.HTTPError as e:
+                            if e.code == 429 and attempt < 2:
+                                wait = 2 ** attempt
+                                print(f"  ⏳ 429 on /flights, retrying in {wait}s")
+                                time.sleep(wait)
+                            else:
+                                raise
                 self.send_response(200)
                 self.send_header('Content-Type', 'application/json')
                 self.send_header('Cache-Control', 'no-store')
@@ -523,12 +591,16 @@ class ProxyHandler(BaseHTTPRequestHandler):
 
 if __name__ == '__main__':
     _load_cache()
-    server = HTTPServer(('', PORT), ProxyHandler)
+    server = ThreadingHTTPServer(('', PORT), ProxyHandler)
+    # Avoid slow-client stalls blocking the accept loop unduly.
+    server.daemon_threads = True
     print(f"""
 ╔══════════════════════════════════════════════╗
 ║        SkyView Live — Local Proxy            ║
 ╠══════════════════════════════════════════════╣
 ║  Proxy running at http://localhost:{PORT}      ║
+║  Cache: {CACHE_FILE}
+║  Upstream fetch limit: {UPSTREAM_FETCH_LIMIT}
 ║  Now open index.html in your browser         ║
 ║  Press Ctrl+C to stop                        ║
 ╚══════════════════════════════════════════════╝
@@ -537,6 +609,7 @@ if __name__ == '__main__':
         server.serve_forever()
     except KeyboardInterrupt:
         print('\nSaving route cache…')
-        _save_cache()
+        with _cache_lock:
+            _save_cache()
         print('Proxy stopped.')
 
