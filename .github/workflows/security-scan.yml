@@ -29,7 +29,7 @@ jobs:
         run: docker build -f Dockerfile.frontend -t skyview-frontend:scan .
 
       - name: Trivy scan proxy image
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: skyview-proxy:scan
           format: table
@@ -39,7 +39,7 @@ jobs:
           exit-code: "0"
 
       - name: Trivy scan frontend image
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: skyview-frontend:scan
           format: table
@@ -50,7 +50,7 @@ jobs:
           skip-setup-trivy: true
 
       - name: Trivy filesystem scan
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: fs
           scan-ref: .
